@@ -8,20 +8,31 @@
 </head>
 <body class="landing-body">
 
-    <nav class="landing-nav">
-        <div class="landing-logo">ECW <span>Studio</span></div>
+    <canvas id="bgCanvas"></canvas>
+
+    <div class="top-bar-right">
         <button id="adminBtn" class="admin-login-trigger">Admin Login</button>
-    </nav>
+    </div>
 
     <div class="hero-container">
         <div class="hero-content">
+            
+            <div class="hero-brand">ECW <span>STUDIO</span></div>
+            
             <h1>Choose Your Experience</h1>
-            <p class="hero-subtitle">Explore our digital showroom.</p>
             
             <div class="hero-cards">
                 <a href="models.html" class="hero-card exterior-card">
                     <div class="card-inner">
-                        <div class="card-icon">🏎️</div>
+                        <div class="card-icon-svg">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M5 17H4C3.44772 17 3 16.5523 3 16V14.5C3 13.1193 4.11929 12 5.5 12H18.5C19.8807 12 21 13.1193 21 14.5V16C21 16.5523 20.5523 17 20 17H19" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M16 12V9C16 8.44772 15.5523 8 15 8H9C8.44772 8 8 8.44772 8 9V12" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="7" cy="17" r="2" />
+                                <circle cx="17" cy="17" r="2" />
+                                <path d="M2 12H22" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.3"/>
+                            </svg>
+                        </div>
                         <h2>Exterior 360</h2>
                         <p>Interactive 3D Walkaround</p>
                         <span class="btn-text">Enter Showroom &rarr;</span>
@@ -30,7 +41,15 @@
 
                 <a href="gallery.html" class="hero-card interior-card">
                     <div class="card-inner">
-                        <div class="card-icon">📷</div>
+                        <div class="card-icon-svg">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M3 12H21" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 3V21" stroke-linecap="round" stroke-linejoin="round"/>
+                                <ellipse cx="12" cy="12" rx="4" ry="9" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                            </svg>
+                        </div>
                         <h2>Interior 360</h2>
                         <p>Immersive Panoramic Views</p>
                         <span class="btn-text">Enter Gallery &rarr;</span>
@@ -71,8 +90,6 @@
 
         adminBtn.onclick = () => { modal.classList.add('active'); document.getElementById('username').focus(); };
         closeBtn.onclick = () => modal.classList.remove('active');
-        
-        // Close if clicking outside box
         modal.onclick = (e) => { if(e.target === modal) modal.classList.remove('active'); };
 
         // Login Logic
@@ -80,7 +97,6 @@
             e.preventDefault();
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
-            
             if (u.toLowerCase() === 'ecw' && p === 'ecw123') {
                 sessionStorage.setItem('ecw_auth', 'true');
                 window.location.href = 'admin.html';
@@ -92,5 +108,7 @@
             }
         });
     </script>
+    
+    <script src="particles.js"></script>
 </body>
 </html>
