@@ -8,10 +8,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app">
+    <div id="app" class="showroom-mode">
         
-        <canvas id="bgCanvas"></canvas>
-
         <div class="top-ui-bar">
             <a href="index.html" class="back-btn">
                 <span class="arrow">←</span> BACK
@@ -28,8 +26,8 @@
                 camera-controls 
                 auto-rotate 
                 shadow-intensity="1" 
-                shadow-softness="0.5"
-                exposure="1.2"
+                shadow-softness="0.6"
+                exposure="1.0"
                 min-camera-orbit="auto 0deg auto" 
                 max-camera-orbit="auto 85deg auto"
                 min-field-of-view="10deg"
@@ -75,6 +73,5 @@
     </div>
     
     <script src="models.js"></script>
-    <script src="particles.js"></script>
 </body>
 </html>
