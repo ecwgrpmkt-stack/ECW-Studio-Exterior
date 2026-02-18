@@ -27,14 +27,16 @@ async function initShowroom() {
         models = glbFiles.map(glb => {
             const baseName = glb.name.substring(0, glb.name.lastIndexOf('.'));
             const pngName = `${baseName}.png`;
+            // Try to find matching PNG for the poster
             const posterFile = files.find(f => f.name === pngName);
             
+            // Format Display Name
             let niceName = baseName.replace(/_/g, ' ').replace(/-/g, ' ');
             niceName = niceName.replace(/\b\w/g, l => l.toUpperCase());
 
             return {
                 src: glb.download_url,
-                // OPTIMIZATION: Use the PNG as the 'poster' so the 3D engine doesn't load immediately
+                // USE UPLOADED PNG AS POSTER
                 poster: posterFile ? posterFile.download_url : 'https://placehold.co/400x300/222/FFF.png?text=No+Preview',
                 name: niceName,
                 year: (niceName.match(/\d{4}/) || ["Model"])[0] 
@@ -47,7 +49,7 @@ async function initShowroom() {
 
     } catch (error) {
         console.error(error);
-        if(document.getElementById('infoName')) document.getElementById('infoName').innerText = "Error Loading";
+        if(document.getElementById('infoName')) document.getElementById('infoName').innerText = "System Error";
     } finally {
         if(loader) setTimeout(() => loader.classList.remove('active'), 500);
     }
@@ -57,16 +59,17 @@ function loadModel(index) {
     if (!models[index]) return;
     const data = models[index];
     
+    // Update Header Info
     document.getElementById('infoName').innerText = data.name;
     document.getElementById('infoYear').innerText = data.year;
 
     if(viewer) {
-        // Critical for performance: Update poster FIRST
+        // Performance: Set poster first
         viewer.poster = data.poster; 
         viewer.src = data.src;
         viewer.alt = `3D Model of ${data.name}`;
         
-        // Reset rotation but don't force load until interaction if possible
+        // Reset state
         viewer.currentTime = 0;
         viewer.autoRotate = true; 
     }
@@ -82,7 +85,7 @@ function buildThumbnails() {
     
     models.forEach((item, i) => {
         const thumb = document.createElement("img");
-        thumb.src = item.poster;
+        thumb.src = item.poster; // Use the poster as the thumbnail
         thumb.className = "thumb";
         thumb.onclick = () => { currentIndex = i; loadModel(currentIndex); };
         panel.appendChild(thumb);
@@ -111,10 +114,12 @@ function setupEvents() {
     };
 
     if(viewer) {
+        // Pause rotation on interaction
         viewer.addEventListener('camera-change', (e) => {
             if (e.detail.source === 'user-interaction') stopAutoRotate();
         });
-        // Optimisation: Preload next model's poster when current loads
+        
+        // Lazy Load next model's poster for speed
         viewer.addEventListener('load', () => {
              const nextIdx = (currentIndex + 1) % models.length;
              const img = new Image(); img.src = models[nextIdx].poster;
@@ -126,6 +131,7 @@ function stopAutoRotate() {
     if(!viewer) return;
     viewer.autoRotate = false;
     document.getElementById('idleIndicator').classList.remove('visible');
+    
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => { viewer.autoRotate = true; }, IDLE_DELAY);
 }
