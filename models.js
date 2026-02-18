@@ -10,11 +10,11 @@ const viewer = document.querySelector("#viewer3d");
 // TIMERS
 let idleTimer = null;
 let slideTimer = null; // 60s auto-next
-const IDLE_DELAY = 3000;       // 3s for Hand Icon
+const IDLE_DELAY = 3000;       // 3s for Hand Icon + Camera Reset
 const SLIDE_DELAY = 60000;     // 60s for Auto-Next
 
 // STATE
-let savedOrbit = null; // Stores {theta, phi} to persist angle
+let savedOrbit = null; // Stores {theta, phi} to persist angle between car switches
 
 async function initShowroom() {
     const loader = document.getElementById('ecwLoader');
@@ -48,7 +48,6 @@ async function initShowroom() {
         });
 
         buildThumbnails();
-        // Initial load without fade
         loadModelData(0);
         setupEvents();
 
@@ -57,41 +56,40 @@ async function initShowroom() {
         if(document.getElementById('infoName')) document.getElementById('infoName').innerText = "ERROR";
     } finally {
         if(loader) setTimeout(() => loader.classList.remove('active'), 500);
-        startTimers(); // Start the idle clocks
+        startTimers(); // Start initial idle check
     }
 }
 
-// --- CORE LOADING LOGIC ---
+// --- TRANSITION LOGIC ---
 
-// Triggers the "Fade to Black -> Switch -> Fade In" sequence
 function transitionToModel(index) {
     const fadeOverlay = document.getElementById('fadeOverlay');
     const loader = document.getElementById('ecwLoader');
     
-    // 1. Save current camera angle
+    // Save current viewing angle before switching
     if (viewer) {
         const orbit = viewer.getCameraOrbit();
         savedOrbit = { theta: orbit.theta, phi: orbit.phi };
     }
 
-    // 2. Fade Out
+    // 1. Fade Out
     fadeOverlay.classList.add('active');
-    loader.classList.add('active'); // Show "ECW" spinner
+    loader.classList.add('active'); 
 
     setTimeout(() => {
-        // 3. Switch Data while screen is black
+        // 2. Switch Model (Behind the black screen)
         currentIndex = index;
         loadModelData(currentIndex);
 
-        // 4. Wait short buffer then fade in
+        // 3. Buffer then Fade In
         setTimeout(() => {
             fadeOverlay.classList.remove('active');
             loader.classList.remove('active');
             updateThumbs();
-            resetTimers(); // Reset 60s timer
+            resetTimers(); 
         }, 800); 
 
-    }, 500); // Wait 500ms for fade to black
+    }, 500); 
 }
 
 function loadModelData(index) {
@@ -106,14 +104,14 @@ function loadModelData(index) {
         viewer.src = data.src;
         viewer.alt = `3D Model of ${data.name}`;
         
-        // APPLY SAVED ORBIT (Persistence)
+        // PERSIST ORBIT (Keep looking at the same spot on the new car)
         if (savedOrbit) {
             viewer.cameraOrbit = `${savedOrbit.theta}rad ${savedOrbit.phi}rad auto`;
         } else {
             viewer.cameraOrbit = "auto auto auto";
         }
 
-        // Always Auto-Rotate on load
+        // Initially ensure auto-rotate is on until interaction
         viewer.autoRotate = true; 
     }
     updateThumbs();
@@ -140,7 +138,7 @@ function updateThumbs() {
     });
 }
 
-// --- INTERACTION & TIMERS ---
+// --- IDLE & INTERACTION LOGIC ---
 
 function setupEvents() {
     document.getElementById("prevBtn").onclick = () => {
@@ -157,25 +155,35 @@ function setupEvents() {
     };
 
     if(viewer) {
-        // User interacts -> Stop rotation -> Reset Timers
+        // Stop rotation & Hide Hand when user touches model
         viewer.addEventListener('camera-change', (e) => {
             if (e.detail.source === 'user-interaction') {
                 viewer.autoRotate = false;
                 document.getElementById('idleIndicator').classList.remove('visible');
-                resetTimers(); // User is active, restart 60s count
+                resetTimers(); // Restart countdown since user is active
             }
         });
     }
 }
 
 function startTimers() {
-    // 3s Timer for Hand Icon + AutoRotate
+    // 3s Timer: Show Hand + Reset Camera Height + Auto-Rotate
     idleTimer = setTimeout(() => {
-        if(viewer) viewer.autoRotate = true;
+        if(viewer) {
+            viewer.autoRotate = true;
+            
+            // SMART CAMERA RESET:
+            // Keep horizontal angle (theta) same, but fix vertical (phi) to side view (~75deg)
+            const currentOrbit = viewer.getCameraOrbit();
+            const currentTheta = currentOrbit.theta; // keep current rotation
+            
+            // Smoothly interpolate to new orbit using the attribute
+            viewer.cameraOrbit = `${currentTheta}rad 75deg auto`;
+        }
         document.getElementById('idleIndicator').classList.add('visible');
     }, IDLE_DELAY);
 
-    // 60s Timer for Auto-Next Slide
+    // 60s Timer: Next Slide
     slideTimer = setTimeout(() => {
         let nextIndex = (currentIndex + 1) % models.length;
         transitionToModel(nextIndex);
