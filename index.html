@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>ECW Studio - Access</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="login-body">
@@ -10,19 +11,28 @@
     <div class="login-container">
         <div class="login-header">
             <h1>ECW Studio 360</h1>
-            <p>Select Access Level</p>
+            <p>Select Experience</p>
         </div>
 
         <div class="access-split">
             <div class="access-card viewer-card">
-                <h2>Viewer Access</h2>
-                <p>Enter the interactive 360° gallery.</p>
+                <div class="card-icon">📷</div>
+                <h2>Interior Gallery</h2>
+                <p>Interactive 360° panoramic tours.</p>
                 <a href="gallery.html" class="access-btn">Enter Gallery</a>
             </div>
 
+            <div class="access-card showroom-card">
+                <div class="card-icon">🏎️</div>
+                <h2>Vehicle Showroom</h2>
+                <p>Inspect 3D exterior models.</p>
+                <a href="models.html" class="access-btn btn-blue">Enter Showroom</a>
+            </div>
+
             <div class="access-card dev-card">
+                <div class="card-icon">⚙️</div>
                 <h2>Developer Login</h2>
-                <p>Manage images and settings.</p>
+                <p>Manage content assets.</p>
                 <form id="loginForm">
                     <input type="text" id="username" placeholder="Username" required autocomplete="off">
                     <input type="password" id="password" placeholder="Password" required>
@@ -39,6 +49,7 @@
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
             
+            // Hardcoded Auth (Replace with real auth in production)
             if (u.toLowerCase() === 'ecw' && p === 'ecw123') {
                 sessionStorage.setItem('ecw_auth', 'true');
                 window.location.href = 'admin.html';
