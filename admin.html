@@ -3,7 +3,6 @@
 <head>
     <meta charset="utf-8">
     <title>ECW Admin Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="admin-body">
@@ -18,8 +17,8 @@
     <div class="admin-container">
         
         <div class="admin-tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button class="tab-btn active" id="tab-images" onclick="switchContext('images')" style="padding: 10px 20px; cursor: pointer; background: #333; color: white; border: 1px solid #444; border-radius: 4px;">📷 360 Gallery</button>
-            <button class="tab-btn" id="tab-models" onclick="switchContext('models')" style="padding: 10px 20px; cursor: pointer; background: #111; color: #888; border: 1px solid #333; border-radius: 4px;">🏎️ 3D Showroom</button>
+            <button class="tab-btn active" id="tab-images" onclick="switchContext('images')" style="padding: 10px 20px; cursor: pointer; background: #3399ff; color: white; border: none; border-radius: 4px; font-weight: bold;">📷 360 Gallery</button>
+            <button class="tab-btn" id="tab-models" onclick="switchContext('models')" style="padding: 10px 20px; cursor: pointer; background: #333; color: #888; border: 1px solid #444; border-radius: 4px; font-weight: bold;">🏎️ 3D Showroom</button>
         </div>
 
         <div class="admin-panel upload-panel">
@@ -40,12 +39,12 @@
 
             <hr class="panel-divider">
 
-            <h2 id="uploadTitle">Upload 360 Images</h2>
-            <p class="upload-hint" id="uploadHint" style="color:#888; font-size:0.9rem; margin-bottom:15px;">Supported: JPG, PNG (Max 25MB)</p>
+            <h2 id="uploadTitle">Upload New Image</h2>
+            <p id="uploadHint" style="color:#888; margin-bottom: 10px; font-size: 0.9rem;">Supported: JPG, PNG</p>
             
             <div class="upload-controls">
                 <div class="file-drop-area" id="dropArea">
-                    <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png">
+                    <input type="file" id="fileInput" multiple accept="image/jpeg, image/png">
                     <p>Drag & Drop Files Here or <span>Browse</span></p>
                 </div>
                 <div id="uploadStatus" class="status-msg"></div>
