@@ -4,19 +4,16 @@
 html, body {
     margin: 0; height: 100%; background: black;
     font-family: 'Helvetica Neue', Arial, sans-serif;
-    overflow: hidden; /* Critical for 360 Viewer */
+    overflow: hidden; 
 }
 
 /* The Main 360 Container */
-#app {
-    display: flex; height: 100%; width: 100%; position: relative;
-}
-
+#app { display: flex; height: 100%; width: 100%; position: relative; }
 #viewer, #model-container { flex: 1; height: 100%; z-index: 1; outline: none; }
 #model-container { background: transparent; position: relative; }
 model-viewer { width: 100%; height: 100%; --poster-color: transparent; background-color: transparent; }
 
-/* SIDEBAR (170px) */
+/* SIDEBAR */
 #sidebar {
     width: 170px; background: #1a1a1a; z-index: 20;
     border-left: 1px solid #333; display: flex; flex-direction: column; height: 100%;
@@ -64,12 +61,11 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 #sizeSlider { width: 80px; }
 .color-swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 1px solid #555; }
 #lockIndicatorTool {
-    margin-top: 5px; font-size: 16px; text-align: center;
-    opacity: 0.5; display: none; animation: pulseLock 2s infinite;
+    margin-top: 5px; font-size: 16px; text-align: center; opacity: 0.5; display: none; animation: pulseLock 2s infinite;
 }
 @keyframes pulseLock { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-/* CONTROLS & OVERLAYS */
+/* CONTROLS */
 #controls {
     position: absolute; bottom: 30px; left: calc(50% - 85px); transform: translateX(-50%);
     display: flex; gap: 20px; z-index: 100; transition: opacity 0.3s;
@@ -117,7 +113,6 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
     border-radius: 20px; color: white; font-size: 12px; font-weight: bold; pointer-events: none; border: 1px solid rgba(255,255,255,0.2);
 }
 
-/* 3D Viewer Overlays */
 #vehicleInfoPanel {
     position: absolute; bottom: 30px; left: 30px; z-index: 90; pointer-events: none;
     text-shadow: 0 2px 10px rgba(0,0,0,0.8);
@@ -193,7 +188,6 @@ input[type="text"], input[type="password"] {
 .badge.success { background: rgba(0, 255, 0, 0.1); color: #00ff00; }
 .badge.warning { background: rgba(255, 165, 0, 0.2); color: orange; border: 1px solid orange; }
 
-/* Admin Actions */
 .action-buttons { display: flex; gap: 8px; }
 .btn-mini {
     width: 30px; height: 30px; border-radius: 4px; border: none; cursor: pointer; display: flex;
@@ -205,7 +199,6 @@ input[type="text"], input[type="password"] {
 .btn-yellow { background: #ffcc00; color: black; }
 .btn-red { background: #ff3333; color: white; }
 
-/* Config Group */
 .config-group { margin-bottom: 15px; }
 .config-group label { display: block; color: #888; margin-bottom: 5px; font-size: 0.9rem; }
 .input-with-btn { display: flex; gap: 10px; align-items: center; }
@@ -219,31 +212,25 @@ input[type="text"], input[type="password"] {
 .btn-icon:hover { background: #ff3333; border-color: #ff3333; }
 .panel-divider { border: 0; height: 1px; background: #333; margin: 25px 0; }
 
-/* =========================================
-   3. CUSTOM UI MODAL (Admin Panel)
-   ========================================= */
+/* MODALS */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.8); z-index: 1000;
     display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px);
 }
 .modal-overlay.active { display: flex; }
-
 .modal-box {
     background: #1a1a1a; width: 400px; border-radius: 8px;
     border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     overflow: hidden; animation: modalPop 0.3s ease;
 }
 @keyframes modalPop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
 .modal-header { padding: 15px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
 .modal-header h3 { margin: 0; color: #fff; font-size: 1.2rem; }
 .modal-close { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; transition: color 0.2s; }
 .modal-close:hover { color: #ff3333; }
-
 .modal-body { padding: 20px; color: #ccc; }
 .modal-footer { padding: 15px 20px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px; background: #111; }
-
 .modal-btn { padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s, opacity 0.2s; }
 .btn-cancel { background: #333; color: white; border: 1px solid #444; }
 .btn-cancel:hover { background: #444; }
@@ -251,11 +238,7 @@ input[type="text"], input[type="password"] {
 .btn-confirm:hover { background: #cc0000; }
 .btn-save { background: #3399ff; color: white; }
 .btn-save:hover { background: #0077ee; }
-
-.rename-input-group { 
-    display: flex; align-items: center; background: rgba(0,0,0,0.4); 
-    border: 1px solid #444; border-radius: 4px; padding: 8px 12px; margin-top: 8px; 
-}
+.rename-input-group { display: flex; align-items: center; background: rgba(0,0,0,0.4); border: 1px solid #444; border-radius: 4px; padding: 8px 12px; margin-top: 8px; }
 .rename-input-group input { border: none; background: transparent; color: white; flex: 1; padding: 0; outline: none; margin: 0; font-size: 1rem; }
 .rename-ext { color: #888; font-weight: bold; margin-left: 5px; font-size: 1rem; }
 
@@ -263,7 +246,6 @@ input[type="text"], input[type="password"] {
    5. NEW LANDING PAGE STYLES (Index.html)
    ========================================= */
 
-/* Body Background */
 body.landing-body {
     background: #050505;
     background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000000 90%);
@@ -271,14 +253,11 @@ body.landing-body {
     position: relative;
 }
 
-/* 1. Background Canvas (Particles) */
 #bgCanvas {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 0; /* Behind everything */
-    pointer-events: none;
+    z-index: 0; pointer-events: none;
 }
 
-/* 2. Top Right Admin Button */
 .top-bar-right {
     position: absolute; top: 20px; right: 30px; z-index: 20;
 }
@@ -289,30 +268,31 @@ body.landing-body {
     backdrop-filter: blur(4px);
 }
 .admin-login-trigger:hover {
-    border-color: #3399ff; color: white; background: rgba(51, 153, 255, 0.1);
+    border-color: #ff3333; color: white; background: rgba(255, 51, 51, 0.1);
 }
 
-/* 3. Hero Content */
 .hero-container {
     height: 100vh; width: 100%;
     display: flex; align-items: center; justify-content: center;
     text-align: center;
-    position: relative; z-index: 10; /* Above particles */
+    position: relative; z-index: 10;
 }
 
+/* UPDATED: Bigger Title, Red Accent */
 .hero-brand {
-    font-size: 1.2rem; font-weight: 800; color: #fff; letter-spacing: 4px;
-    margin-bottom: 10px; opacity: 0.8;
+    font-size: 3.5rem; /* Massive x2 Size */
+    font-weight: 800; color: #fff; letter-spacing: 6px;
+    margin-bottom: 5px; text-transform: uppercase;
 }
-.hero-brand span { color: #3399ff; }
+.hero-brand span { color: #ff3333; /* RED */ }
 
+/* UPDATED: Smaller Subtitle */
 .hero-content h1 {
-    font-size: 2.25rem; /* Reduced size */
-    margin: 0 0 50px 0; color: white; letter-spacing: 1px;
-    font-weight: 300; text-transform: uppercase;
+    font-size: 1rem; /* Halved Size */
+    margin: 0 0 50px 0; color: #888; letter-spacing: 2px;
+    font-weight: 400; text-transform: uppercase;
 }
 
-/* 4. Hero Cards */
 .hero-cards {
     display: flex; gap: 30px; justify-content: center;
 }
@@ -322,12 +302,12 @@ body.landing-body {
     border-radius: 12px; position: relative; overflow: hidden;
     transition: transform 0.3s, border-color 0.3s, background 0.3s;
     display: flex; align-items: center; justify-content: center;
-    backdrop-filter: blur(2px); /* Glass effect over particles */
+    backdrop-filter: blur(2px);
 }
 .hero-card:hover {
     transform: translateY(-10px);
-    border-color: #3399ff;
-    background: rgba(51, 153, 255, 0.05);
+    border-color: #ff3333; /* Red Hover */
+    background: rgba(255, 51, 51, 0.05);
     box-shadow: 0 20px 50px rgba(0,0,0,0.6);
 }
 
@@ -336,9 +316,8 @@ body.landing-body {
     display: flex; flex-direction: column; align-items: center; gap: 15px;
 }
 
-/* SVG Icons */
 .card-icon-svg {
-    width: 64px; height: 64px; margin-bottom: 10px; color: #ccc;
+    width: 64px; height: 64px; margin-bottom: 10px; color: #666;
     transition: color 0.3s, transform 0.3s;
 }
 .card-icon-svg svg {
@@ -346,37 +325,32 @@ body.landing-body {
     filter: drop-shadow(0 0 5px rgba(255,255,255,0.1));
 }
 .hero-card:hover .card-icon-svg {
-    color: #3399ff; transform: scale(1.1);
-    filter: drop-shadow(0 0 8px rgba(51, 153, 255, 0.4));
+    color: #ff3333; transform: scale(1.1);
+    filter: drop-shadow(0 0 8px rgba(255, 51, 51, 0.4));
 }
 
 .hero-card h2 {
     color: white; margin: 0; font-size: 1.4rem; letter-spacing: 1px;
 }
-.hero-card p {
-    color: #666; margin: 0; font-size: 0.85rem;
-}
 
 .btn-text {
-    margin-top: 20px; color: #3399ff; font-weight: bold; font-size: 0.8rem; text-transform: uppercase;
+    margin-top: 20px; color: #ff3333; font-weight: bold; font-size: 0.8rem; text-transform: uppercase;
     opacity: 0; transform: translateY(10px); transition: all 0.3s; letter-spacing: 1px;
 }
 .hero-card:hover .btn-text {
     opacity: 1; transform: translateY(0);
 }
 
-/* Login Box Specifics */
 .login-box { width: 350px; border: 1px solid #333; }
 .login-box label { color: #888; font-size: 0.8rem; display: block; margin-bottom: 5px; }
 .login-box input { width: 100%; margin-bottom: 15px; }
 
-/* Mobile Responsiveness */
 @media (max-width: 768px) {
     .hero-cards { flex-direction: column; }
     .hero-card { width: 100%; height: 140px; flex-direction: row; text-align: left; padding: 0 20px; }
     .card-inner { flex-direction: row; width: 100%; justify-content: flex-start; gap: 20px; }
     .card-icon-svg { width: 40px; height: 40px; margin: 0; }
     .btn-text { display: none; }
-    .hero-content h1 { font-size: 1.5rem; margin-bottom: 30px; }
-    .hero-brand { font-size: 1rem; }
+    .hero-brand { font-size: 2rem; }
+    .hero-content h1 { font-size: 0.8rem; margin-bottom: 30px; }
 }
