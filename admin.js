@@ -2,30 +2,42 @@
 const REPO_OWNER = "ecwgrpmkt-stack";
 const REPO_NAME = "360_gallery";
 
-// STATE - DEFAULTS TO IMAGES TO PRESERVE ORIGINAL SYSTEM
+// STATE: Default to images to keep existing gallery working
 let currentFolder = "images"; 
 
 // --- 1. AUTH ---
 if (sessionStorage.getItem('ecw_auth') !== 'true') window.location.href = 'index.html';
 function logout() { sessionStorage.removeItem('ecw_auth'); window.location.href = 'index.html'; }
 
-// --- 2. SWITCHING CONTEXT ---
+// --- 2. CONTEXT SWITCHING (THE FIX) ---
 function switchContext(folder) {
     currentFolder = folder;
     
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`tab-${folder}`).classList.add('active');
+    // Toggle Button Styles
+    const btnImg = document.getElementById('tab-images');
+    const btnMod = document.getElementById('tab-models');
     
+    if (folder === 'images') {
+        btnImg.style.background = '#3399ff'; btnImg.style.color = 'white';
+        btnMod.style.background = '#111'; btnMod.style.color = '#888';
+    } else {
+        btnMod.style.background = '#3399ff'; btnMod.style.color = 'white';
+        btnImg.style.background = '#111'; btnImg.style.color = '#888';
+    }
+
     const isModel = folder === 'models';
     document.getElementById('uploadTitle').innerText = isModel ? "Upload 3D Models & Posters" : "Upload 360 Images";
     document.getElementById('uploadHint').innerText = isModel ? "Required: .GLB (Model) AND .PNG (Poster)" : "Supported: JPG, PNG";
     
-    // Strict Input Filter
+    // Change Accepted File Types
     document.getElementById('fileInput').accept = isModel ? ".glb, .png" : ".jpg, .jpeg, .png";
     document.getElementById('repoUrl').value = `/${folder}`;
     
     loadFiles();
 }
+
+// Initialize Tabs on Load
+switchContext('images');
 
 // --- 3. TOKEN LOGIC ---
 const tokenInput = document.getElementById('githubToken');
@@ -57,9 +69,9 @@ async function loadFiles() {
     try {
         const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${currentFolder}?t=${Date.now()}`);
         
-        // HANDLE MISSING FOLDER GRACEFULLY
+        // HANDLE MISSING FOLDER (Fixes the System Info Error)
         if (response.status === 404) {
-             tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:orange;">Folder /${currentFolder} does not exist yet. Upload a file to create it.</td></tr>`;
+             tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:orange;">Folder '/${currentFolder}' does not exist yet.<br>Upload a file above to create it automatically.</td></tr>`;
              return;
         }
         
@@ -100,9 +112,9 @@ function buildRowHTML(file) {
     
     let preview = "";
     if (['jpg','jpeg','png'].includes(ext)) {
-        preview = `<img src="${file.download_url}" class="admin-thumb" style="opacity: ${isDisabled ? 0.5 : 1}" loading="lazy">`;
+        preview = `<img src="${file.download_url}" class="admin-thumb" style="width:50px; height:30px; object-fit:cover; opacity: ${isDisabled ? 0.5 : 1}">`;
     } else if (ext === 'glb') {
-        preview = `<div class="file-icon-box">📦 3D</div>`;
+        preview = `<div style="background:#333; color:white; font-size:10px; padding:2px;">📦 3D</div>`;
     }
 
     return `
@@ -112,8 +124,6 @@ function buildRowHTML(file) {
         <td>${statusBadge}</td>
         <td>
             <div class="action-buttons">
-                <button onclick="openRenameModal('${file.name}', '${file.sha}')" class="btn-mini btn-blue" title="Rename">✎</button>
-                <button onclick="toggleVisibility('${file.name}', '${file.sha}', '${file.download_url}')" class="btn-mini btn-yellow" title="${isDisabled ? 'Show' : 'Hide'}">${isDisabled ? '👁️' : '🚫'}</button>
                 <button onclick="openDeleteModal('${file.name}', '${file.sha}')" class="btn-mini btn-red" title="Delete">🗑️</button>
             </div>
         </td>
@@ -165,66 +175,7 @@ async function executeDelete(filename, sha) {
     } catch(e) { alert(e.message); }
 }
 
-function openRenameModal(oldName, sha) {
-    const lastDot = oldName.lastIndexOf('.');
-    const baseName = oldName.substring(0, lastDot);
-    const ext = oldName.substring(lastDot);
-    
-    document.getElementById('modalTitle').innerText = "Rename Asset";
-    document.getElementById('modalBody').innerHTML = `
-        <label>New Filename</label>
-        <div class="input-with-btn" style="background:rgba(0,0,0,0.3); padding:5px;">
-            <input type="text" id="renameBaseInput" value="${baseName}">
-            <span style="color:#888; padding:5px;">${ext}</span>
-        </div>`;
-    document.getElementById('modalFooter').innerHTML = `
-        <button class="modal-btn btn-cancel" onclick="closeModal()">Cancel</button>
-        <button class="modal-btn btn-save" onclick="executeRename('${oldName}', '${ext}', '${sha}')">Save</button>`;
-    modal.classList.add('active');
-}
-
-async function executeRename(oldName, ext, oldSha) {
-    const newBase = document.getElementById('renameBaseInput').value.trim().replace(/[^a-zA-Z0-9.\-_]/g, '_');
-    const newName = newBase + ext;
-    if(newName === oldName) { closeModal(); return; }
-
-    try {
-        // GET -> PUT -> DELETE strategy
-        const getRes = await githubRequest(`contents/${currentFolder}/${encodeURIComponent(oldName)}`, 'GET');
-        const getData = await getRes.json();
-        
-        await githubRequest(`contents/${currentFolder}/${encodeURIComponent(newName)}`, 'PUT', {
-            message: `Rename ${oldName} to ${newName}`, content: getData.content
-        });
-        
-        await githubRequest(`contents/${currentFolder}/${encodeURIComponent(oldName)}`, 'DELETE', {
-            message: `Cleanup ${oldName}`, sha: oldSha
-        });
-        
-        closeModal(); loadFiles();
-    } catch(e) { alert("Rename Failed: " + e.message); }
-}
-
-async function toggleVisibility(filename, sha, url) {
-    const isHidden = filename.startsWith("disabled_");
-    const newName = isHidden ? filename.replace("disabled_", "") : `disabled_${filename}`;
-    
-    // Quick rename via raw URL to avoid 404s on fresh fetch
-    try {
-        const getRes = await fetch(url);
-        const blob = await getRes.blob();
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = async () => {
-            const b64 = reader.result.split(',')[1];
-            await githubRequest(`contents/${currentFolder}/${encodeURIComponent(newName)}`, 'PUT', { message: 'Toggle Visibility', content: b64 });
-            await githubRequest(`contents/${currentFolder}/${encodeURIComponent(filename)}`, 'DELETE', { message: 'Toggle Visibility', sha: sha });
-            loadFiles();
-        };
-    } catch(e) { alert("Toggle failed: " + e.message); }
-}
-
-// --- 7. UPLOAD ---
+// --- 7. UPLOAD LOGIC ---
 document.getElementById('fileInput').addEventListener('change', async function() {
     const files = Array.from(this.files);
     if(files.length === 0) return;
@@ -266,6 +217,3 @@ document.getElementById('fileInput').addEventListener('change', async function()
         loadFiles();
     }, 2000 * files.length + 1000);
 });
-
-// Start
-loadFiles();
