@@ -1,6 +1,6 @@
 // CONFIGURATION
 const REPO_OWNER = "ecwgrpmkt-stack";
-const REPO_NAME = "ECW-Studio"; // FIXED: Matches your actual Repo Name
+const REPO_NAME = "ECW-Studio"; // FIXED: Correct Repo Name
 const MODEL_FOLDER = "models";
 
 let models = []; 
@@ -14,53 +14,47 @@ async function initShowroom() {
     if(loader) loader.classList.add('active');
 
     try {
-        // Fetch file list from the CORRECT repo
         const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${MODEL_FOLDER}`);
         
-        if (response.status === 404) {
-            throw new Error(`Folder 'models' not found in repo '${REPO_NAME}'.`);
-        }
-        if (!response.ok) throw new Error("GitHub API Error. Check limits.");
+        if (response.status === 404) throw new Error("Models folder not found.");
+        if (!response.ok) throw new Error("GitHub API Error.");
         
         const files = await response.json();
         
-        // Filter for GLB files only
+        // Filter for GLB files (Case insensitive)
         const glbFiles = files.filter(f => f.name.toLowerCase().endsWith('.glb') && !f.name.startsWith('disabled_'));
 
-        if (glbFiles.length === 0) throw new Error("No 3D models (.glb) found in the folder.");
+        if (glbFiles.length === 0) throw new Error("No 3D models found in repository.");
 
-        // Map GLB files to objects
         models = glbFiles.map(glb => {
             const baseName = glb.name.substring(0, glb.name.lastIndexOf('.'));
             const pngName = `${baseName}.png`;
-            // Check if a matching PNG exists for the thumbnail
+            // Try to find matching PNG
             const posterFile = files.find(f => f.name === pngName);
             
-            // Format Name: "ford_mustang_1965" -> "Ford Mustang 1965"
+            // Format Name
             let niceName = baseName.replace(/_/g, ' ').replace(/-/g, ' ');
             niceName = niceName.replace(/\b\w/g, l => l.toUpperCase());
 
             return {
                 src: glb.download_url,
-                // Fallback to placeholder if no PNG is uploaded
+                // If poster exists use it, otherwise use placeholder text
                 poster: posterFile ? posterFile.download_url : 'https://placehold.co/400x300/222/FFF.png?text=No+Preview',
                 name: niceName,
-                // Extract year if present, else default
                 year: (niceName.match(/\d{4}/) || ["Model"])[0] 
             };
         });
 
-        // Initialize UI
+        // Initialize
         buildThumbnails();
         loadModel(0);
         setupEvents();
 
     } catch (error) {
         console.error(error);
-        if(document.getElementById('infoName')) {
-            document.getElementById('infoName').innerText = "System Error";
-            document.getElementById('infoYear').innerText = error.message;
-        }
+        // Show error on screen so you know what happened
+        document.getElementById('infoName').innerText = "ERROR";
+        document.getElementById('infoYear').innerText = "Check Console";
     } finally {
         if(loader) setTimeout(() => loader.classList.remove('active'), 500);
     }
@@ -70,19 +64,22 @@ function loadModel(index) {
     if (!models[index]) return;
     const data = models[index];
     
-    // Update Text
     document.getElementById('infoName').innerText = data.name;
     document.getElementById('infoYear').innerText = data.year;
 
     if(viewer) {
-        // Load Poster first for speed
+        // Load Model
         viewer.poster = data.poster; 
         viewer.src = data.src;
         viewer.alt = `3D Model of ${data.name}`;
+        
+        // Force Auto-Rotate on load
         viewer.currentTime = 0;
+        viewer.autoRotate = true; 
     }
     
     updateThumbs();
+    resetIdleTimer();
 }
 
 function buildThumbnails() {
@@ -107,23 +104,40 @@ function updateThumbs() {
 }
 
 function setupEvents() {
-    const prev = document.getElementById("prevBtn");
-    const next = document.getElementById("nextBtn");
-    const fs = document.getElementById("fsBtn");
-
-    if(prev) prev.onclick = () => {
+    document.getElementById("prevBtn").onclick = () => {
         currentIndex = (currentIndex - 1 + models.length) % models.length;
         loadModel(currentIndex);
     };
-    if(next) next.onclick = () => {
+    document.getElementById("nextBtn").onclick = () => {
         currentIndex = (currentIndex + 1) % models.length;
         loadModel(currentIndex);
     };
-    if(fs) fs.onclick = () => {
+    document.getElementById("fsBtn").onclick = () => {
         const app = document.getElementById("app");
         !document.fullscreenElement ? app.requestFullscreen() : document.exitFullscreen();
     };
+
+    if(viewer) {
+        // Pause rotation when user grabs the car
+        viewer.addEventListener('camera-change', (e) => {
+            if (e.detail.source === 'user-interaction') stopAutoRotate();
+        });
+    }
 }
 
-// Auto-start
+function stopAutoRotate() {
+    if(!viewer) return;
+    viewer.autoRotate = false;
+    document.getElementById('idleIndicator').classList.remove('visible');
+    
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => { viewer.autoRotate = true; }, IDLE_DELAY);
+}
+
+function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    if(viewer) viewer.autoRotate = true;
+}
+
+// Start
 initShowroom();
