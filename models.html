@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>ECW Showroom - 3D Models</title>
+    <title>ECW Showroom</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -10,6 +10,16 @@
     <div id="app">
         
         <canvas id="bgCanvas"></canvas>
+
+        <div class="top-ui-bar">
+            <a href="index.html" class="back-btn">
+                <span class="arrow">←</span> BACK
+            </a>
+            <div class="model-info">
+                <h1 id="infoName">LOADING...</h1>
+                <h2 id="infoYear">----</h2>
+            </div>
+        </div>
 
         <div id="model-container">
             <model-viewer 
@@ -37,26 +47,19 @@
             </model-viewer>
         </div>
 
-        <div id="vehicleInfoPanel">
-            <h1 id="infoName">Loading Repository...</h1>
-            <div class="info-sub">
-                <span id="infoYear">ECW</span> 
-                <span class="divider">|</span> 
-                <span id="infoModel">Studio</span>
-            </div>
-        </div>
-
-        <div id="dockContainer">
+        <div id="bottomDock">
             
-            <button id="fsBtn" title="Fullscreen">⛶</button>
+            <div class="fs-wrapper">
+                <button id="fsBtn" title="Fullscreen">⛶</button>
+            </div>
 
             <div class="thumbnail-bar">
-                <button id="prevBtn" class="nav-btn">◀</button>
+                <button id="prevBtn" class="nav-arrow">◀</button>
                 
                 <div id="thumbPanel" class="thumb-scroll-area">
                     </div>
 
-                <button id="nextBtn" class="nav-btn">▶</button>
+                <button id="nextBtn" class="nav-arrow">▶</button>
             </div>
         </div>
         
