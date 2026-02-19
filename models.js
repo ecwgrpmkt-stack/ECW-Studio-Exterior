@@ -14,7 +14,13 @@ const IDLE_DELAY = 3000;
 const SLIDE_DELAY = 60000;     
 let colorEngineTimer = null;   
 let savedOrbit = null; 
-let currentBlobUrl = null; // Memory management for cached files
+let currentBlobUrl = null; 
+
+// VARIANT MAPPING
+let validIndices = [];
+let singleIdx = -1;
+let twoIdx = -1;
+let otherIdx = -1;
 
 async function initShowroom() {
     const loader = document.getElementById('ecwLoader');
@@ -45,6 +51,25 @@ async function initShowroom() {
             };
         });
 
+        // -----------------------------------------------------
+        // SMART CATEGORIZATION LOGIC
+        // -----------------------------------------------------
+        singleIdx = models.findIndex(m => /(single|one)/i.test(m.name));
+        twoIdx = models.findIndex(m => /(two|dual)/i.test(m.name));
+        otherIdx = models.findIndex((m, i) => i !== singleIdx && i !== twoIdx);
+
+        if(singleIdx !== -1) validIndices.push(singleIdx);
+        if(twoIdx !== -1) validIndices.push(twoIdx);
+        if(otherIdx !== -1) validIndices.push(otherIdx);
+
+        // Failsafe: If filenames don't match our regex, just load the first one as "Other"
+        if(validIndices.length === 0 && models.length > 0) {
+            validIndices.push(0);
+            otherIdx = 0;
+        }
+
+        // Start App with the first mapped model
+        currentIndex = validIndices[0];
         startApp();
 
     } catch (error) {
@@ -57,6 +82,9 @@ async function initShowroom() {
             name: "Ford Mustang 1965",
             year: "1965"
         }];
+        validIndices = [0];
+        otherIdx = 0;
+        currentIndex = 0;
         startApp();
     } finally {
         if(loader) setTimeout(() => loader.classList.remove('active'), 300);
@@ -64,13 +92,45 @@ async function initShowroom() {
 }
 
 function startApp() {
-    buildThumbnails();
-    loadModelData(0);
+    buildVariantButtons();
+    loadModelData(currentIndex);
     setupEvents();
     startTimers(); 
 }
 
+function buildVariantButtons() {
+    const panel = document.getElementById("variantPanel");
+    if(!panel) return;
+    panel.innerHTML = "";
+    
+    if(singleIdx !== -1) panel.appendChild(createBtn("Single Tone", singleIdx));
+    if(twoIdx !== -1) panel.appendChild(createBtn("Two Tone", twoIdx));
+    if(otherIdx !== -1) panel.appendChild(createBtn("Other", otherIdx));
+}
+
+function createBtn(text, targetIndex) {
+    const btn = document.createElement("button");
+    btn.className = "tone-btn";
+    btn.innerText = text;
+    btn.dataset.index = targetIndex;
+    btn.onclick = () => transitionToModel(targetIndex);
+    return btn;
+}
+
+function updateVariantButtons() {
+    document.querySelectorAll(".tone-btn").forEach(btn => {
+        if(parseInt(btn.dataset.index) === currentIndex) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+        }
+    });
+}
+
+// --- TRANSITIONS & CACHE ---
 function transitionToModel(index) {
+    if (index === currentIndex) return; // Ignore if clicking already active model
+
     const fadeOverlay = document.getElementById('fadeOverlay');
     const loader = document.getElementById('ecwLoader');
     
@@ -93,17 +153,13 @@ function transitionToModel(index) {
         setTimeout(() => {
             fadeOverlay.classList.remove('active');
             loader.classList.remove('active');
-            updateThumbs();
             resetTimers(); 
-            preloadNextModel(); // AGGRESSIVE PRELOADER HOOK
+            preloadNextModel(); 
         }, 200); 
 
     }, 200); 
 }
 
-// -----------------------------------------------------
-// HIGH-PERFORMANCE CACHE & LOAD SYSTEM
-// -----------------------------------------------------
 async function loadModelData(index) {
     if (!models[index]) return;
     const data = models[index];
@@ -115,35 +171,29 @@ async function loadModelData(index) {
         viewer.poster = data.poster; 
         viewer.alt = `3D Model of ${data.name}`;
 
-        // Memory Cleanup: Release old cached files to prevent memory leaks
         if (currentBlobUrl) {
             URL.revokeObjectURL(currentBlobUrl);
             currentBlobUrl = null;
         }
 
         try {
-            // PERSISTENT BROWSER CACHING
             const cache = await caches.open('ecw-3d-models-v1');
             const cachedResponse = await cache.match(data.src);
 
             if (cachedResponse) {
-                // INSTANT LOAD: File is already on user's hard drive
                 const blob = await cachedResponse.blob();
                 currentBlobUrl = URL.createObjectURL(blob);
                 viewer.src = currentBlobUrl;
             } else {
-                // FIRST TIME LOAD: Fetch from internet & save to cache silently
                 viewer.src = data.src;
                 fetch(data.src, { mode: 'cors' })
                     .then(res => { if(res.ok) cache.put(data.src, res.clone()); })
-                    .catch(e => console.warn("Cache save ignored", e));
+                    .catch(e => console.warn("Cache save ignored"));
             }
         } catch (e) {
-            // Failsafe for incognito mode or cache errors
             viewer.src = data.src;
         }
         
-        // Persist Camera Orbit
         if (savedOrbit) {
             viewer.cameraOrbit = `${savedOrbit.theta}rad ${savedOrbit.phi}rad auto`;
         } else {
@@ -151,60 +201,32 @@ async function loadModelData(index) {
         }
         viewer.autoRotate = true; 
     }
-    updateThumbs();
+    updateVariantButtons();
 }
 
 function preloadNextModel() {
-    if (models.length > 1) {
-        const nextIndex = (currentIndex + 1) % models.length;
-        const nextModel = models[nextIndex];
+    if (validIndices.length > 1) {
+        let currentPos = validIndices.indexOf(currentIndex);
+        let nextPos = (currentPos + 1) % validIndices.length;
+        const nextModel = models[validIndices[nextPos]];
 
-        // 1. Preload Image Poster
         const img = new Image();
         img.src = nextModel.poster;
 
-        // 2. AGGRESSIVE BACKGROUND DOWNLOAD OF 3D MODEL
         caches.open('ecw-3d-models-v1').then(cache => {
             cache.match(nextModel.src).then(cachedResponse => {
                 if (!cachedResponse) {
-                    // Not in cache, so download it in the background now!
                     fetch(nextModel.src, { mode: 'cors', priority: 'low' })
                         .then(res => { if(res.ok) cache.put(nextModel.src, res.clone()); })
-                        .catch(() => {}); // Ignore silent background failures
+                        .catch(() => {});
                 }
             });
         }).catch(() => {});
     }
 }
-// -----------------------------------------------------
 
-function buildThumbnails() {
-    const panel = document.getElementById("thumbPanel");
-    if(!panel) return;
-    panel.innerHTML = "";
-    
-    models.forEach((item, i) => {
-        const thumb = document.createElement("img");
-        thumb.src = item.poster; 
-        thumb.className = "thumb";
-        thumb.onclick = () => transitionToModel(i);
-        panel.appendChild(thumb);
-    });
-}
-
-function updateThumbs() {
-    const thumbs = document.querySelectorAll(".thumb");
-    thumbs.forEach((t, i) => {
-        t.classList.toggle("active", i === currentIndex);
-        if(i === currentIndex) {
-            t.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-        }
-    });
-}
-
+// --- IDLE & EVENTS ---
 function setupEvents() {
-    document.getElementById("prevBtn").onclick = () => transitionToModel((currentIndex - 1 + models.length) % models.length);
-    document.getElementById("nextBtn").onclick = () => transitionToModel((currentIndex + 1) % models.length);
     document.getElementById("fsBtn").onclick = () => {
         const app = document.getElementById("app");
         !document.fullscreenElement ? app.requestFullscreen() : document.exitFullscreen();
@@ -242,7 +264,11 @@ function startTimers() {
     }, IDLE_DELAY);
 
     slideTimer = setTimeout(() => {
-        transitionToModel((currentIndex + 1) % models.length);
+        if(validIndices.length > 1) {
+            let currentPos = validIndices.indexOf(currentIndex);
+            let nextPos = (currentPos + 1) % validIndices.length;
+            transitionToModel(validIndices[nextPos]);
+        }
     }, SLIDE_DELAY);
 }
 
@@ -251,5 +277,3 @@ function resetTimers() {
     clearTimeout(slideTimer);
     startTimers();
 }
-
-initShowroom();
