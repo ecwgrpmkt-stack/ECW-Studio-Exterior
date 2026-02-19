@@ -31,7 +31,7 @@ body.landing-body { position: relative; width: 100%; height: 100%; }
 .hero-card:hover .btn-text { opacity: 1; transform: translateY(0); }
 
 /* =========================================
-   3. 3D SHOWROOM UI
+   3. 3D SHOWROOM UI & DOCK
    ========================================= */
 #fadeOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 150; pointer-events: none; opacity: 0; transition: opacity 0.2s ease-in-out; } 
 #fadeOverlay.active { opacity: 1; pointer-events: all; }
@@ -47,7 +47,6 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 #infoName { margin: 0; font-size: 2rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; line-height: 1; }
 #infoYear { margin: 5px 0 0 0; font-size: 1.2rem; font-weight: 300; color: #ff3333; letter-spacing: 1px; }
 
-/* DOCK STYLES */
 #bottomDock { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; z-index: 100; pointer-events: none; gap: 15px; }
 .fs-wrapper { pointer-events: auto; }
 #fsBtn { width: 50px; height: 50px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.6); color: white; font-size: 1.4rem; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
@@ -55,9 +54,9 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 
 /* VARIANT BUTTON AREA */
 #bottomDock .thumbnail-bar { pointer-events: auto; display: flex; align-items: center; justify-content: center; background: rgba(30, 30, 30, 0.5); backdrop-filter: blur(15px); border-radius: 30px; padding: 10px 20px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); }
-.variant-btn-area { display: flex; gap: 10px; }
+.variant-btn-area { display: flex; gap: 15px; }
 .tone-btn { 
-    background: transparent; color: #aaa; border: 1px solid transparent; 
+    background: transparent; color: #ccc; border: 1px solid transparent; 
     padding: 10px 25px; border-radius: 20px; font-size: 0.85rem; 
     font-weight: bold; text-transform: uppercase; cursor: pointer; 
     transition: all 0.3s; letter-spacing: 1px; outline: none;
@@ -105,6 +104,7 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 .loader-text { font-weight: 800; letter-spacing: 4px; color: #fff; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
+/* Idle Indicator */
 #idleIndicator { position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; opacity: 0; transition: opacity 0.5s; text-align: center; z-index: 50; }
 #idleIndicator.visible { opacity: 1; }
 .hand-icon { font-size: 3rem; animation: swipe 2s infinite ease-in-out; }
@@ -137,6 +137,7 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 .login-container { width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .access-split { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
 .access-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 12px; width: 300px; text-align: center; transition: transform 0.3s; }
+.access-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.3); }
 .access-btn { display: inline-block; width: 100%; padding: 12px 0; background: #fff; color: #000; text-decoration: none; font-weight: bold; border-radius: 6px; margin-top: 20px; border: none; cursor: pointer; }
 .dev-btn { background: #333; color: white; }
 input[type="text"], input[type="password"] { width: 100%; padding: 12px; margin-bottom: 10px; background: rgba(0,0,0,0.3); border: 1px solid #333; color: white; border-radius: 4px; box-sizing: border-box; }
@@ -176,7 +177,7 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
     .hero-card { width: 90%; height: 140px; flex-direction: row; padding: 0 20px; }
     .card-inner { flex-direction: row; width: 100%; justify-content: flex-start; gap: 20px; padding: 0; }
     #bottomDock .thumbnail-bar { max-width: 95%; padding: 10px; }
-    .variant-btn-area { flex-wrap: wrap; justify-content: center; }
+    .variant-btn-area { flex-wrap: wrap; justify-content: center; gap: 8px; }
     .tone-btn { padding: 8px 15px; font-size: 0.75rem; }
     #infoName { font-size: 1.5rem; }
     .color-editor-dock { display: none; }
