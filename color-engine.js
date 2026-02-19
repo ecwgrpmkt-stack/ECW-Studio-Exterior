@@ -8,6 +8,7 @@ const ColorEngine = {
     groups: {},
     dock: null,
 
+    // Math Helpers
     rgbToHsl(r, g, b) {
         let max = Math.max(r, g, b), min = Math.min(r, g, b);
         let h, s, l = (max + min) / 2;
@@ -48,6 +49,7 @@ const ColorEngine = {
 
     clamp(val, min, max) { return Math.min(Math.max(val, min), max); },
 
+    // Analyzer
     analyze(viewer) {
         this.viewer = viewer;
         this.dock = document.getElementById('colorEditorDock');
@@ -99,12 +101,12 @@ const ColorEngine = {
         this.buildUI();
     },
 
+    // UI Builder with Accordion Logic
     buildUI() {
         if (!this.dock) return;
         
-        // Failsafe: If model has no editable colors
         if (Object.keys(this.groups).every(k => this.groups[k].length === 0)) {
-            this.dock.innerHTML = '<div class="ce-title">Material Tuner</div><div style="padding:10px;color:#888;font-size:0.8rem;text-align:center;">No editable colors detected on this model.</div>';
+            this.dock.innerHTML = '<div class="ce-title">Material Tuner</div><div style="padding:10px;color:#888;font-size:0.8rem;text-align:center;">No editable colors detected.</div>';
             this.dock.classList.remove('hidden');
             this.dock.classList.add('active');
             return;
@@ -121,16 +123,16 @@ const ColorEngine = {
             avgR /= groupMats.length; avgG /= groupMats.length; avgB /= groupMats.length;
             
             const hexColor = `#${Math.round(avgR*255).toString(16).padStart(2,'0')}${Math.round(avgG*255).toString(16).padStart(2,'0')}${Math.round(avgB*255).toString(16).padStart(2,'0')}`;
-            
-            const initialR = Math.round(groupMats[0].originalRgb[0] * 255);
-            const initialG = Math.round(groupMats[0].originalRgb[1] * 255);
-            const initialB = Math.round(groupMats[0].originalRgb[2] * 255);
+
+            // Determine if collapsed by default
+            const isCollapsed = groupName.includes('Blacks') || groupName.includes('Whites');
 
             const section = document.createElement('div');
-            section.className = 'ce-section';
+            section.className = `ce-section ${isCollapsed ? 'collapsed' : ''}`;
             
             section.innerHTML = `
-                <div class="ce-header">
+                <div class="ce-header" title="Click to Expand/Collapse">
+                    <span class="ce-toggle">▼</span>
                     <div class="ce-swatch" style="background-color: ${hexColor}"></div>
                     <span>${groupName}</span>
                     <button class="ce-reset" title="Restore Original">↺</button>
@@ -149,16 +151,26 @@ const ColorEngine = {
                         <div class="range-wrap"><div class="range-tick"></div><input type="range" data-type="con" min="-100" max="100" value="0"></div>
                     </div>
                 </div>
-                <div class="ce-rgb-readout">RGB(${initialR}, ${initialG}, ${initialB})</div>
             `;
             
+            // Accordion Toggle Event
+            const header = section.querySelector('.ce-header');
+            header.addEventListener('click', (e) => {
+                // Prevent toggle if the reset button was clicked
+                if (e.target.classList.contains('ce-reset')) return;
+                section.classList.toggle('collapsed');
+            });
+
+            // Slider Events
             const inputs = section.querySelectorAll('input');
             inputs.forEach(input => {
                 input.addEventListener('input', () => this.applyColor(groupName, section));
             });
 
+            // Reset Event
             const resetBtn = section.querySelector('.ce-reset');
-            resetBtn.addEventListener('click', () => {
+            resetBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Stop accordion toggle
                 inputs.forEach(input => input.value = 0);
                 this.applyColor(groupName, section);
             });
@@ -170,6 +182,7 @@ const ColorEngine = {
         this.dock.classList.add('active');
     },
 
+    // Apply Color (RGB readout logic removed)
     applyColor(groupName, section) {
         const hueShift = parseFloat(section.querySelector('[data-type="hue"]').value) / 360;
         const satShift = parseFloat(section.querySelector('[data-type="sat"]').value) / 100;
@@ -179,9 +192,8 @@ const ColorEngine = {
         const factor = (259 * (C + 255)) / (255 * (259 - C));
 
         const groupMats = this.groups[groupName];
-        let displayR = 0, displayG = 0, displayB = 0;
 
-        groupMats.forEach((m, index) => {
+        groupMats.forEach((m) => {
             let [h, s, l] = m.hsl;
             
             h = (h + hueShift + 1) % 1; 
@@ -194,18 +206,7 @@ const ColorEngine = {
             b = this.clamp(factor * (b - 0.5) + 0.5, 0, 1);
 
             m.mat.pbrMetallicRoughness.setBaseColorFactor([r, g, b, m.originalRgb[3]]);
-
-            if (index === 0) {
-                displayR = Math.round(r * 255);
-                displayG = Math.round(g * 255);
-                displayB = Math.round(b * 255);
-            }
         });
-
-        const readout = section.querySelector('.ce-rgb-readout');
-        if (readout) {
-            readout.innerText = `RGB(${displayR}, ${displayG}, ${displayB})`;
-        }
     },
 
     reset() {
