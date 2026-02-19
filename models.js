@@ -22,8 +22,7 @@ async function initShowroom() {
 
     try {
         const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${MODEL_FOLDER}`);
-        
-        if (!response.ok) throw new Error("GitHub API Error (Rate Limit likely).");
+        if (!response.ok) throw new Error("GitHub API Error.");
         
         const files = await response.json();
         const glbFiles = files.filter(f => f.name.toLowerCase().endsWith('.glb') && !f.name.startsWith('disabled_'));
@@ -52,18 +51,15 @@ async function initShowroom() {
         console.warn("API Failed, using Hardcoded Fallback Models so the app keeps working...", error);
         document.getElementById('infoName').innerText = "API LIMIT REACHED";
         
-        // FAILSAFE BACKUP: Ensures UI never breaks during testing limits
-        models = [
-            {
-                src: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/ford_mustang_1965.glb",
-                poster: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/ford_mustang_1965.png",
-                name: "Ford Mustang 1965 (Backup)",
-                year: "1965"
-            }
-        ];
+        models = [{
+            src: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/ford_mustang_1965.glb",
+            poster: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/ford_mustang_1965.png",
+            name: "Ford Mustang 1965",
+            year: "1965"
+        }];
         startApp();
     } finally {
-        if(loader) setTimeout(() => loader.classList.remove('active'), 500);
+        if(loader) setTimeout(() => loader.classList.remove('active'), 300);
     }
 }
 
@@ -74,6 +70,7 @@ function startApp() {
     startTimers(); 
 }
 
+// SPEED OPTIMIZATION: Reduced Transition Delays
 function transitionToModel(index) {
     const fadeOverlay = document.getElementById('fadeOverlay');
     const loader = document.getElementById('ecwLoader');
@@ -88,20 +85,31 @@ function transitionToModel(index) {
     fadeOverlay.classList.add('active');
     loader.classList.add('active'); 
 
+    // Reduced wait from 500ms to 200ms
     setTimeout(() => {
         try {
             currentIndex = index;
             loadModelData(currentIndex);
         } catch(e) { console.error(e); }
 
+        // Reduced buffer from 800ms to 200ms
         setTimeout(() => {
             fadeOverlay.classList.remove('active');
             loader.classList.remove('active');
             updateThumbs();
             resetTimers(); 
-        }, 800); 
+            preloadNextPoster(); // Aggressive caching
+        }, 200); 
 
-    }, 500); 
+    }, 200); 
+}
+
+function preloadNextPoster() {
+    if (models.length > 1) {
+        const nextIndex = (currentIndex + 1) % models.length;
+        const img = new Image();
+        img.src = models[nextIndex].poster;
+    }
 }
 
 function loadModelData(index) {
@@ -167,14 +175,13 @@ function setupEvents() {
             }
         });
 
-        // Robust Hook: Waits slightly to ensure materials are fully built in memory
         viewer.addEventListener('load', () => {
             if (typeof ColorEngine !== 'undefined') {
                 clearTimeout(colorEngineTimer);
                 colorEngineTimer = setTimeout(() => {
                     try { ColorEngine.analyze(viewer); } 
                     catch(e) { console.error("ColorEngine Crash Prevented:", e); }
-                }, 800);
+                }, 400); // Trigger analyzer slightly faster
             }
         });
     }
