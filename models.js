@@ -9,9 +9,9 @@ const viewer = document.querySelector("#viewer3d");
 
 // TIMERS
 let idleTimer = null;
-let slideTimer = null; // 60s auto-next
+let slideTimer = null; 
 const IDLE_DELAY = 3000;       // 3s for Hand Icon + Camera Reset
-const SLIDE_DELAY = 60000;     // 60s for Auto-Next
+const SLIDE_DELAY = 60000;     // 60s for Auto-Next fade
 
 // STATE
 let savedOrbit = null; // Stores {theta, phi} to persist angle between car switches
@@ -56,7 +56,7 @@ async function initShowroom() {
         if(document.getElementById('infoName')) document.getElementById('infoName').innerText = "ERROR";
     } finally {
         if(loader) setTimeout(() => loader.classList.remove('active'), 500);
-        startTimers(); // Start initial idle check
+        startTimers(); 
     }
 }
 
@@ -66,7 +66,10 @@ function transitionToModel(index) {
     const fadeOverlay = document.getElementById('fadeOverlay');
     const loader = document.getElementById('ecwLoader');
     
-    // Save current viewing angle before switching
+    // Hide Color Editor during transition
+    if (typeof ColorEngine !== 'undefined') ColorEngine.reset();
+
+    // Save current camera angle before switching
     if (viewer) {
         const orbit = viewer.getCameraOrbit();
         savedOrbit = { theta: orbit.theta, phi: orbit.phi };
@@ -161,6 +164,14 @@ function setupEvents() {
                 viewer.autoRotate = false;
                 document.getElementById('idleIndicator').classList.remove('visible');
                 resetTimers(); // Restart countdown since user is active
+            }
+        });
+
+        // INIT COLOR ENGINE WHEN GLB PARSES
+        viewer.addEventListener('load', () => {
+            if (typeof ColorEngine !== 'undefined') {
+                // Short delay to ensure materials are fully registered by the engine
+                setTimeout(() => ColorEngine.analyze(viewer), 1000);
             }
         });
     }
