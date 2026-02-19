@@ -7,14 +7,14 @@ let models = [];
 let currentIndex = 0;
 const viewer = document.querySelector("#viewer3d");
 
-// TIMERS
+// TIMERS & STATE
 let idleTimer = null;
 let slideTimer = null; 
 const IDLE_DELAY = 3000;       
 const SLIDE_DELAY = 60000;     
 let colorEngineTimer = null;   
-
 let savedOrbit = null; 
+let currentBlobUrl = null; // Memory management for cached files
 
 async function initShowroom() {
     const loader = document.getElementById('ecwLoader');
@@ -48,7 +48,7 @@ async function initShowroom() {
         startApp();
 
     } catch (error) {
-        console.warn("API Failed, using Hardcoded Fallback Models so the app keeps working...", error);
+        console.warn("API Failed, using Fallback Models...", error);
         document.getElementById('infoName').innerText = "API LIMIT REACHED";
         
         models = [{
@@ -70,7 +70,6 @@ function startApp() {
     startTimers(); 
 }
 
-// SPEED OPTIMIZATION: Reduced Transition Delays
 function transitionToModel(index) {
     const fadeOverlay = document.getElementById('fadeOverlay');
     const loader = document.getElementById('ecwLoader');
@@ -85,34 +84,27 @@ function transitionToModel(index) {
     fadeOverlay.classList.add('active');
     loader.classList.add('active'); 
 
-    // Reduced wait from 500ms to 200ms
     setTimeout(() => {
         try {
             currentIndex = index;
             loadModelData(currentIndex);
         } catch(e) { console.error(e); }
 
-        // Reduced buffer from 800ms to 200ms
         setTimeout(() => {
             fadeOverlay.classList.remove('active');
             loader.classList.remove('active');
             updateThumbs();
             resetTimers(); 
-            preloadNextPoster(); // Aggressive caching
+            preloadNextModel(); // AGGRESSIVE PRELOADER HOOK
         }, 200); 
 
     }, 200); 
 }
 
-function preloadNextPoster() {
-    if (models.length > 1) {
-        const nextIndex = (currentIndex + 1) % models.length;
-        const img = new Image();
-        img.src = models[nextIndex].poster;
-    }
-}
-
-function loadModelData(index) {
+// -----------------------------------------------------
+// HIGH-PERFORMANCE CACHE & LOAD SYSTEM
+// -----------------------------------------------------
+async function loadModelData(index) {
     if (!models[index]) return;
     const data = models[index];
     
@@ -121,9 +113,37 @@ function loadModelData(index) {
 
     if(viewer) {
         viewer.poster = data.poster; 
-        viewer.src = data.src;
         viewer.alt = `3D Model of ${data.name}`;
+
+        // Memory Cleanup: Release old cached files to prevent memory leaks
+        if (currentBlobUrl) {
+            URL.revokeObjectURL(currentBlobUrl);
+            currentBlobUrl = null;
+        }
+
+        try {
+            // PERSISTENT BROWSER CACHING
+            const cache = await caches.open('ecw-3d-models-v1');
+            const cachedResponse = await cache.match(data.src);
+
+            if (cachedResponse) {
+                // INSTANT LOAD: File is already on user's hard drive
+                const blob = await cachedResponse.blob();
+                currentBlobUrl = URL.createObjectURL(blob);
+                viewer.src = currentBlobUrl;
+            } else {
+                // FIRST TIME LOAD: Fetch from internet & save to cache silently
+                viewer.src = data.src;
+                fetch(data.src, { mode: 'cors' })
+                    .then(res => { if(res.ok) cache.put(data.src, res.clone()); })
+                    .catch(e => console.warn("Cache save ignored", e));
+            }
+        } catch (e) {
+            // Failsafe for incognito mode or cache errors
+            viewer.src = data.src;
+        }
         
+        // Persist Camera Orbit
         if (savedOrbit) {
             viewer.cameraOrbit = `${savedOrbit.theta}rad ${savedOrbit.phi}rad auto`;
         } else {
@@ -133,6 +153,30 @@ function loadModelData(index) {
     }
     updateThumbs();
 }
+
+function preloadNextModel() {
+    if (models.length > 1) {
+        const nextIndex = (currentIndex + 1) % models.length;
+        const nextModel = models[nextIndex];
+
+        // 1. Preload Image Poster
+        const img = new Image();
+        img.src = nextModel.poster;
+
+        // 2. AGGRESSIVE BACKGROUND DOWNLOAD OF 3D MODEL
+        caches.open('ecw-3d-models-v1').then(cache => {
+            cache.match(nextModel.src).then(cachedResponse => {
+                if (!cachedResponse) {
+                    // Not in cache, so download it in the background now!
+                    fetch(nextModel.src, { mode: 'cors', priority: 'low' })
+                        .then(res => { if(res.ok) cache.put(nextModel.src, res.clone()); })
+                        .catch(() => {}); // Ignore silent background failures
+                }
+            });
+        }).catch(() => {});
+    }
+}
+// -----------------------------------------------------
 
 function buildThumbnails() {
     const panel = document.getElementById("thumbPanel");
@@ -181,7 +225,7 @@ function setupEvents() {
                 colorEngineTimer = setTimeout(() => {
                     try { ColorEngine.analyze(viewer); } 
                     catch(e) { console.error("ColorEngine Crash Prevented:", e); }
-                }, 400); // Trigger analyzer slightly faster
+                }, 400); 
             }
         });
     }
