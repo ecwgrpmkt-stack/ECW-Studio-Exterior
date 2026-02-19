@@ -16,27 +16,26 @@ let colorEngineTimer = null;
 let savedOrbit = null; 
 let currentBlobUrl = null; 
 
-// VARIANT MAPPING
-let validIndices = [];
-let singleIdx = -1;
-let twoIdx = -1;
-let otherIdx = -1;
-
 async function initShowroom() {
     const loader = document.getElementById('ecwLoader');
     if(loader) loader.classList.add('active');
 
     try {
         const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${MODEL_FOLDER}`);
-        if (!response.ok) throw new Error("GitHub API Error.");
+        if (!response.ok) throw new Error("GitHub API Error (Rate Limit likely).");
         
         const files = await response.json();
-        const glbFiles = files.filter(f => f.name.toLowerCase().endsWith('.glb') && !f.name.startsWith('disabled_'));
+        
+        // Loosened filter to catch missing .glb extensions just in case
+        const modelFiles = files.filter(f => 
+            (f.name.toLowerCase().endsWith('.glb') || f.name.toLowerCase().includes('tone')) 
+            && !f.name.startsWith('disabled_')
+        );
 
-        if (glbFiles.length === 0) throw new Error("No 3D models found.");
+        if (modelFiles.length === 0) throw new Error("No 3D models found.");
 
-        models = glbFiles.map(glb => {
-            const baseName = glb.name.substring(0, glb.name.lastIndexOf('.'));
+        let tempModels = modelFiles.map(glb => {
+            const baseName = glb.name.replace('.glb', '');
             const pngName = `${baseName}.png`;
             const posterFile = files.find(f => f.name === pngName);
             
@@ -52,39 +51,37 @@ async function initShowroom() {
         });
 
         // -----------------------------------------------------
-        // SMART CATEGORIZATION LOGIC
+        // SMART CATEGORIZATION: Build strictly 3 items max
         // -----------------------------------------------------
-        singleIdx = models.findIndex(m => /(single|one)/i.test(m.name));
-        twoIdx = models.findIndex(m => /(two|dual)/i.test(m.name));
-        otherIdx = models.findIndex((m, i) => i !== singleIdx && i !== twoIdx);
+        let singleModel = tempModels.find(m => /(single|one)/i.test(m.name));
+        let twoModel = tempModels.find(m => /(two|dual)/i.test(m.name));
+        let otherModel = tempModels.find(m => !/(single|one|two|dual)/i.test(m.name));
 
-        if(singleIdx !== -1) validIndices.push(singleIdx);
-        if(twoIdx !== -1) validIndices.push(twoIdx);
-        if(otherIdx !== -1) validIndices.push(otherIdx);
+        models = []; // Reset and rigidly map
+        if (singleModel) { singleModel.variant = "Single Tone"; models.push(singleModel); }
+        if (twoModel) { twoModel.variant = "Two Tone"; models.push(twoModel); }
+        if (otherModel) { otherModel.variant = "Other"; models.push(otherModel); }
 
-        // Failsafe: If filenames don't match our regex, just load the first one as "Other"
-        if(validIndices.length === 0 && models.length > 0) {
-            validIndices.push(0);
-            otherIdx = 0;
+        if (models.length === 0) {
+            // Failsafe if regex misses everything
+            tempModels[0].variant = "Model 1";
+            models.push(tempModels[0]);
         }
 
-        // Start App with the first mapped model
-        currentIndex = validIndices[0];
         startApp();
 
     } catch (error) {
-        console.warn("API Failed, using Fallback Models...", error);
+        console.warn("API Failed, using Hardcoded Fallback...", error);
         document.getElementById('infoName').innerText = "API LIMIT REACHED";
         
+        // Updated fallback to match current repo contents
         models = [{
-            src: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/ford_mustang_1965.glb",
-            poster: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/ford_mustang_1965.png",
-            name: "Ford Mustang 1965",
-            year: "1965"
+            src: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/Toyota%20H300%20Single%20Tone.glb",
+            poster: "https://placehold.co/400x300/222/FFF.png?text=No+Preview",
+            name: "Toyota H300 Single Tone",
+            year: "Model",
+            variant: "Single Tone"
         }];
-        validIndices = [0];
-        otherIdx = 0;
-        currentIndex = 0;
         startApp();
     } finally {
         if(loader) setTimeout(() => loader.classList.remove('active'), 300);
@@ -92,6 +89,7 @@ async function initShowroom() {
 }
 
 function startApp() {
+    currentIndex = 0; // Always start at index 0 of the mapped array
     buildVariantButtons();
     loadModelData(currentIndex);
     setupEvents();
@@ -103,18 +101,14 @@ function buildVariantButtons() {
     if(!panel) return;
     panel.innerHTML = "";
     
-    if(singleIdx !== -1) panel.appendChild(createBtn("Single Tone", singleIdx));
-    if(twoIdx !== -1) panel.appendChild(createBtn("Two Tone", twoIdx));
-    if(otherIdx !== -1) panel.appendChild(createBtn("Other", otherIdx));
-}
-
-function createBtn(text, targetIndex) {
-    const btn = document.createElement("button");
-    btn.className = "tone-btn";
-    btn.innerText = text;
-    btn.dataset.index = targetIndex;
-    btn.onclick = () => transitionToModel(targetIndex);
-    return btn;
+    models.forEach((m, index) => {
+        const btn = document.createElement("button");
+        btn.className = "tone-btn";
+        btn.innerText = m.variant;
+        btn.dataset.index = index;
+        btn.onclick = () => transitionToModel(index);
+        panel.appendChild(btn);
+    });
 }
 
 function updateVariantButtons() {
@@ -129,7 +123,7 @@ function updateVariantButtons() {
 
 // --- TRANSITIONS & CACHE ---
 function transitionToModel(index) {
-    if (index === currentIndex) return; // Ignore if clicking already active model
+    if (index === currentIndex) return;
 
     const fadeOverlay = document.getElementById('fadeOverlay');
     const loader = document.getElementById('ecwLoader');
@@ -205,10 +199,9 @@ async function loadModelData(index) {
 }
 
 function preloadNextModel() {
-    if (validIndices.length > 1) {
-        let currentPos = validIndices.indexOf(currentIndex);
-        let nextPos = (currentPos + 1) % validIndices.length;
-        const nextModel = models[validIndices[nextPos]];
+    if (models.length > 1) {
+        let nextIndex = (currentIndex + 1) % models.length;
+        const nextModel = models[nextIndex];
 
         const img = new Image();
         img.src = nextModel.poster;
@@ -246,7 +239,7 @@ function setupEvents() {
                 clearTimeout(colorEngineTimer);
                 colorEngineTimer = setTimeout(() => {
                     try { ColorEngine.analyze(viewer); } 
-                    catch(e) { console.error("ColorEngine Crash Prevented:", e); }
+                    catch(e) { console.error("ColorEngine Error:", e); }
                 }, 400); 
             }
         });
@@ -264,10 +257,8 @@ function startTimers() {
     }, IDLE_DELAY);
 
     slideTimer = setTimeout(() => {
-        if(validIndices.length > 1) {
-            let currentPos = validIndices.indexOf(currentIndex);
-            let nextPos = (currentPos + 1) % validIndices.length;
-            transitionToModel(validIndices[nextPos]);
+        if(models.length > 1) {
+            transitionToModel((currentIndex + 1) % models.length);
         }
     }, SLIDE_DELAY);
 }
@@ -277,3 +268,5 @@ function resetTimers() {
     clearTimeout(slideTimer);
     startTimers();
 }
+
+initShowroom();
