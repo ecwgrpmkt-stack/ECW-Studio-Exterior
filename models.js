@@ -10,9 +10,9 @@ const viewer = document.querySelector("#viewer3d");
 // TIMERS
 let idleTimer = null;
 let slideTimer = null; 
-const IDLE_DELAY = 3000;       
-const SLIDE_DELAY = 60000;     
-let colorEngineTimer = null; // Debounce for Color Engine
+const IDLE_DELAY = 3000;       // 3s for Hand Icon + Camera Reset
+const SLIDE_DELAY = 60000;     // 60s for Auto-Next fade
+let colorEngineTimer = null;   // Debounce timer for the Color Engine load
 
 // STATE
 let savedOrbit = null; 
@@ -23,6 +23,8 @@ async function initShowroom() {
 
     try {
         const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${MODEL_FOLDER}`);
+        
+        if (response.status === 404) throw new Error("Models folder not found.");
         if (!response.ok) throw new Error("GitHub API Error.");
         
         const files = await response.json();
@@ -59,25 +61,31 @@ async function initShowroom() {
     }
 }
 
+// --- TRANSITION LOGIC ---
+
 function transitionToModel(index) {
     const fadeOverlay = document.getElementById('fadeOverlay');
     const loader = document.getElementById('ecwLoader');
     
-    // Clear Color Engine UI instantly before swap
+    // Hide Color Editor instantly before swap
     if (typeof ColorEngine !== 'undefined') ColorEngine.reset();
 
+    // Save current camera angle before switching
     if (viewer) {
         const orbit = viewer.getCameraOrbit();
         savedOrbit = { theta: orbit.theta, phi: orbit.phi };
     }
 
+    // 1. Fade Out
     fadeOverlay.classList.add('active');
     loader.classList.add('active'); 
 
     setTimeout(() => {
+        // 2. Switch Model 
         currentIndex = index;
         loadModelData(currentIndex);
 
+        // 3. Buffer then Fade In
         setTimeout(() => {
             fadeOverlay.classList.remove('active');
             loader.classList.remove('active');
@@ -100,11 +108,13 @@ function loadModelData(index) {
         viewer.src = data.src;
         viewer.alt = `3D Model of ${data.name}`;
         
+        // PERSIST ORBIT
         if (savedOrbit) {
             viewer.cameraOrbit = `${savedOrbit.theta}rad ${savedOrbit.phi}rad auto`;
         } else {
             viewer.cameraOrbit = "auto auto auto";
         }
+
         viewer.autoRotate = true; 
     }
     updateThumbs();
@@ -114,6 +124,7 @@ function buildThumbnails() {
     const panel = document.getElementById("thumbPanel");
     if(!panel) return;
     panel.innerHTML = "";
+    
     models.forEach((item, i) => {
         const thumb = document.createElement("img");
         thumb.src = item.poster; 
@@ -130,6 +141,8 @@ function updateThumbs() {
     });
 }
 
+// --- IDLE & INTERACTION LOGIC ---
+
 function setupEvents() {
     document.getElementById("prevBtn").onclick = () => {
         transitionToModel((currentIndex - 1 + models.length) % models.length);
@@ -143,6 +156,7 @@ function setupEvents() {
     };
 
     if(viewer) {
+        // Stop rotation & Hide Hand on interaction
         viewer.addEventListener('camera-change', (e) => {
             if (e.detail.source === 'user-interaction') {
                 viewer.autoRotate = false;
@@ -151,11 +165,11 @@ function setupEvents() {
             }
         });
 
-        // ROBUST COLOR ENGINE HOOK
+        // DEBOUNCED COLOR ENGINE HOOK
         viewer.addEventListener('load', () => {
             if (typeof ColorEngine !== 'undefined') {
                 clearTimeout(colorEngineTimer);
-                // Wait 500ms after load to ensure scene graph is completely parsed
+                // Wait 500ms after load event to ensure scene graph is completely ready
                 colorEngineTimer = setTimeout(() => ColorEngine.analyze(viewer), 500);
             }
         });
@@ -163,15 +177,19 @@ function setupEvents() {
 }
 
 function startTimers() {
+    // 3s Timer: Show Hand + Reset Camera Height + Auto-Rotate
     idleTimer = setTimeout(() => {
         if(viewer) {
             viewer.autoRotate = true;
+            
+            // Keep horizontal angle (theta), fix vertical (phi) to side view (~75deg)
             const currentOrbit = viewer.getCameraOrbit();
             viewer.cameraOrbit = `${currentOrbit.theta}rad 75deg auto`;
         }
         document.getElementById('idleIndicator').classList.add('visible');
     }, IDLE_DELAY);
 
+    // 60s Timer: Next Slide Fade
     slideTimer = setTimeout(() => {
         transitionToModel((currentIndex + 1) % models.length);
     }, SLIDE_DELAY);
@@ -183,4 +201,5 @@ function resetTimers() {
     startTimers();
 }
 
+// Start
 initShowroom();
