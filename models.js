@@ -14,14 +14,13 @@ const IDLE_DELAY = 3000;
 const SLIDE_DELAY = 60000;     
 let colorEngineTimer = null;   
 let savedOrbit = null; 
-let currentBlobUrl = null; 
 
 async function initShowroom() {
     const loader = document.getElementById('ecwLoader');
     if(loader) loader.classList.add('active');
 
     try {
-        // 1. FETCH ENTIRE REPO TREE IN 1 CALL (Saves API limits)
+        // 1. Fetch the entire repo structure in a single API call (prevents rate limits)
         const treeUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${BRANCH}?recursive=1`;
         const response = await fetch(treeUrl);
         
@@ -29,56 +28,56 @@ async function initShowroom() {
         
         const data = await response.json();
         
-        // Filter only files inside the 'models' directory
+        // Filter out only files inside the 'models' folder
         const modelFiles = data.tree.filter(item => item.path.startsWith('models/') && item.type === 'blob');
 
-        // Helper Function to safely map files inside specific folders
+        // 2. HELPER: Grab whatever 3D file is inside the target folder
         const getModelFromFolder = (folderName, variantName) => {
             const folderPrefix = `models/${folderName}/`;
             
-            // Find any file in this folder that isn't a PNG image
-            const modelItem = modelFiles.find(f => f.path.startsWith(folderPrefix) && !f.path.endsWith('.png'));
-            if (!modelItem) return null;
+            // Find any file in this folder that is NOT an image or text file
+            const modelItem = modelFiles.find(f => 
+                f.path.startsWith(folderPrefix) && 
+                !f.path.endsWith('.png') && 
+                !f.path.endsWith('.jpg') &&
+                !f.path.endsWith('.md')
+            );
+            
+            if (!modelItem) return null; // Folder is empty or missing
 
-            // Find an image in this folder
-            const posterItem = modelFiles.find(f => f.path.startsWith(folderPrefix) && f.path.endsWith('.png'));
+            // Find a preview image if one exists in the same folder
+            const posterItem = modelFiles.find(f => f.path.startsWith(folderPrefix) && (f.path.endsWith('.png') || f.path.endsWith('.jpg')));
 
-            // Route through jsDelivr CDN for high-speed, CORS-safe fetching
             return {
-                src: `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@${BRANCH}/${encodeURI(modelItem.path)}`,
-                poster: posterItem ? `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@${BRANCH}/${encodeURI(posterItem.path)}` : 'https://placehold.co/400x300/222/FFF.png?text=No+Preview',
+                src: `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${encodeURI(modelItem.path)}`,
+                poster: posterItem ? `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${encodeURI(posterItem.path)}` : 'https://placehold.co/400x300/222/FFF.png?text=No+Preview',
                 variant: variantName
             };
         };
 
-        // 2. DYNAMICALLY BUILD THE ARRAY BASED ON FOLDERS
+        // 3. MAP FOLDERS TO BUTTONS
         models = [];
-        const singleData = getModelFromFolder('Single Tone', 'Single Tone');
-        const twoData = getModelFromFolder('Two Tone', 'Two Tone');
-        const otherData = getModelFromFolder('Other', 'Other');
+        const singleData = getModelFromFolder('Single Tone', 'SINGLE TONE');
+        const twoData = getModelFromFolder('Two Tone', 'TWO TONE');
+        const otherData = getModelFromFolder('Other', 'OTHER');
 
         if (singleData) models.push(singleData);
         if (twoData) models.push(twoData);
-        if (otherData) models.push(otherData); // Only pushes if the folder is NOT empty
+        if (otherData) models.push(otherData); // Only creates the 'Other' button if a file exists
 
-        if (models.length === 0) throw new Error("No valid files found in folders.");
+        if (models.length === 0) throw new Error("No files found in any of the folders.");
 
         startApp();
 
     } catch (error) {
-        console.warn("API Failed. Using Fallbacks mapped to your specific folders...", error);
+        console.warn("API Failed or Folders Empty. Using External Fallback to prevent crash...", error);
         
-        // Bulletproof Fallbacks to the jsDelivr CDN using your exact new folder structure
+        // If GitHub blocks the IP, load a generic placeholder so the UI doesn't break
         models = [
             {
-                src: `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@${BRANCH}/models/Single%20Tone/Toyota%20H300%20Single%20Tone.glb`,
-                poster: "https://placehold.co/400x300/222/FFF.png?text=No+Preview",
-                variant: "Single Tone"
-            },
-            {
-                src: `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@${BRANCH}/models/Two%20Tone/Toyota%20H300%20Two%20Tone.glb`,
-                poster: "https://placehold.co/400x300/222/FFF.png?text=No+Preview",
-                variant: "Two Tone"
+                src: "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
+                poster: "https://placehold.co/400x300/222/FFF.png?text=API+Limit+Hit",
+                variant: "API LIMIT HIT"
             }
         ];
         startApp();
@@ -120,7 +119,6 @@ function updateVariantButtons() {
     });
 }
 
-// --- TRANSITIONS & FETCHING ---
 function transitionToModel(index) {
     if (index === currentIndex) return;
 
@@ -138,68 +136,33 @@ function transitionToModel(index) {
     loader.classList.add('active'); 
 
     setTimeout(() => {
-        try {
-            currentIndex = index;
-            loadModelData(currentIndex);
-        } catch(e) { console.error(e); }
+        currentIndex = index;
+        loadModelData(currentIndex);
 
         setTimeout(() => {
             fadeOverlay.classList.remove('active');
             loader.classList.remove('active');
             resetGlobalTimers(); 
-            preloadNextModel(); 
         }, 200); 
 
     }, 200); 
 }
 
-async function loadModelData(index) {
+function loadModelData(index) {
     if (!models[index]) return;
     const data = models[index];
 
     if(viewer) {
         viewer.poster = data.poster; 
 
-        if (currentBlobUrl) {
-            URL.revokeObjectURL(currentBlobUrl);
-            currentBlobUrl = null;
+        // CRITICAL EXTENSION FIX: 
+        // If the file is uploaded without a .glb extension, trick the viewer into reading it
+        let finalSrc = data.src;
+        if (!finalSrc.toLowerCase().includes('.glb') && !finalSrc.toLowerCase().includes('.gltf')) {
+            finalSrc += '#.glb';
         }
 
-        try {
-            let finalBlob = null;
-            
-            // Advanced Cache Loading Setup
-            if ('caches' in window && window.location.protocol !== 'file:') {
-                const cache = await caches.open('ecw-3d-models-v1');
-                const cachedResponse = await cache.match(data.src);
-
-                if (cachedResponse) {
-                    finalBlob = await cachedResponse.blob();
-                } else {
-                    const res = await fetch(data.src, { mode: 'cors' });
-                    if (res.ok) {
-                        finalBlob = await res.blob();
-                        finalBlob = new Blob([finalBlob], { type: 'model/gltf-binary' }); // Force MIME TYPE
-                        cache.put(data.src, new Response(finalBlob));
-                    }
-                }
-            } else {
-                const res = await fetch(data.src, { mode: 'cors' });
-                if (res.ok) finalBlob = await res.blob();
-            }
-
-            if (finalBlob) {
-                const glbBlob = new Blob([finalBlob], { type: 'model/gltf-binary' });
-                currentBlobUrl = URL.createObjectURL(glbBlob);
-                viewer.src = currentBlobUrl;
-            } else {
-                viewer.src = data.src;
-            }
-
-        } catch (e) {
-            console.warn("Blob fetch failed, falling back to basic URL", e);
-            viewer.src = data.src;
-        }
+        viewer.src = finalSrc;
         
         if (savedOrbit) {
             viewer.cameraOrbit = `${savedOrbit.theta}rad ${savedOrbit.phi}rad auto`;
@@ -211,40 +174,12 @@ async function loadModelData(index) {
     updateVariantButtons();
 }
 
-function preloadNextModel() {
-    if (models.length > 1) {
-        let nextIndex = (currentIndex + 1) % models.length;
-        const nextModel = models[nextIndex];
-
-        const img = new Image();
-        img.src = nextModel.poster;
-
-        if ('caches' in window && window.location.protocol !== 'file:') {
-            caches.open('ecw-3d-models-v1').then(cache => {
-                cache.match(nextModel.src).then(cachedResponse => {
-                    if (!cachedResponse) {
-                        fetch(nextModel.src, { mode: 'cors', priority: 'low' })
-                            .then(res => res.blob())
-                            .then(blob => {
-                                const glbBlob = new Blob([blob], { type: 'model/gltf-binary' });
-                                cache.put(nextModel.src, new Response(glbBlob));
-                            })
-                            .catch(() => {});
-                    }
-                });
-            }).catch(() => {});
-        }
-    }
-}
-
-// --- GLOBAL UX & EVENT LOGIC ---
 function setupEvents() {
     document.getElementById("fsBtn").onclick = () => {
         const app = document.getElementById("app");
         !document.fullscreenElement ? app.requestFullscreen() : document.exitFullscreen();
     };
 
-    // UI interactions hide the idle indicator but KEEP auto-rotate active
     ['pointermove', 'pointerdown', 'keydown'].forEach(evt => {
         window.addEventListener(evt, resetGlobalTimers);
     });
