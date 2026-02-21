@@ -2,110 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>ECW Studio - Select Experience</title>
+    <title>ECW Studio - Vehicle Customization</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="landing-body">
-
+    
     <canvas id="bgCanvas"></canvas>
 
     <div class="top-bar-right">
-        <button id="adminBtn" class="admin-login-trigger">Admin Login</button>
+        <a href="https://ecwgrpmkt-stack.github.io/360_gallery/admin.html" class="admin-login-trigger">Admin Portal</a>
     </div>
 
     <div class="hero-container">
         <div class="hero-content">
-            
-            <div class="hero-brand">ECW <span>STUDIO</span></div>
-            
-            <h1>Choose Your Experience</h1>
+            <h1 class="hero-brand">ECW <span>STUDIO</span></h1>
+            <h1>Virtual Vehicle Customization</h1>
             
             <div class="hero-cards">
-                <a href="models.html" class="hero-card exterior-card">
+                
+                <a href="models.html" class="hero-card">
                     <div class="card-inner">
                         <div class="card-icon-svg">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <path d="M5 17H4C3.44772 17 3 16.5523 3 16V14.5C3 13.1193 4.11929 12 5.5 12H18.5C19.8807 12 21 13.1193 21 14.5V16C21 16.5523 20.5523 17 20 17H19" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M16 12V9C16 8.44772 15.5523 8 15 8H9C8.44772 8 8 8.44772 8 9V12" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle cx="7" cy="17" r="2" />
-                                <circle cx="17" cy="17" r="2" />
-                                <path d="M2 12H22" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.3"/>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+                                <circle cx="7" cy="17" r="2"/>
+                                <path d="M9 17h6"/>
+                                <circle cx="17" cy="17" r="2"/>
                             </svg>
                         </div>
                         <h2>Exterior 360</h2>
-                        <span class="btn-text">Enter Showroom &rarr;</span>
+                        <span class="btn-text">Explore 3D Models</span>
                     </div>
                 </a>
 
-                <a href="gallery.html" class="hero-card interior-card">
+                <a href="https://ecwgrpmkt-stack.github.io/360_gallery/index.html" class="hero-card">
                     <div class="card-inner">
                         <div class="card-icon-svg">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-                                <path d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M3 12H21" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M12 3V21" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/>
+                                <path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a6.5 6.5 0 1 1-10 0V11a2 2 0 0 0-4 0z"/>
                             </svg>
                         </div>
                         <h2>Interior 360</h2>
-                        <span class="btn-text">Enter Gallery &rarr;</span>
+                        <span class="btn-text">View Custom Seats</span>
                     </div>
                 </a>
+
             </div>
         </div>
     </div>
 
-    <div id="loginModal" class="modal-overlay">
-        <div class="modal-box login-box">
-            <div class="modal-header">
-                <h3>Developer Access</h3>
-                <button class="modal-close" id="closeLogin">×</button>
-            </div>
-            <div class="modal-body">
-                <form id="loginForm">
-                    <div class="input-group">
-                        <label>Username</label>
-                        <input type="text" id="username" placeholder="Enter username" required autocomplete="off">
-                    </div>
-                    <div class="input-group">
-                        <label>Password</label>
-                        <input type="password" id="password" placeholder="Enter password" required>
-                    </div>
-                    <button type="submit" class="access-btn btn-blue">Secure Login</button>
-                    <div id="loginError" class="error-msg">Invalid Credentials</div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Modal Logic
-        const modal = document.getElementById('loginModal');
-        const adminBtn = document.getElementById('adminBtn');
-        const closeBtn = document.getElementById('closeLogin');
-
-        adminBtn.onclick = () => { modal.classList.add('active'); document.getElementById('username').focus(); };
-        closeBtn.onclick = () => modal.classList.remove('active');
-        modal.onclick = (e) => { if(e.target === modal) modal.classList.remove('active'); };
-
-        // Login Logic
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const u = document.getElementById('username').value.trim();
-            const p = document.getElementById('password').value.trim();
-            if (u.toLowerCase() === 'ecw' && p === 'ecw123') {
-                sessionStorage.setItem('ecw_auth', 'true');
-                window.location.href = 'admin.html';
-            } else {
-                const err = document.getElementById('loginError');
-                err.style.display = 'block';
-                document.querySelector('.login-box').classList.add('shake');
-                setTimeout(() => document.querySelector('.login-box').classList.remove('shake'), 500);
-            }
-        });
-    </script>
-    
     <script src="particles.js"></script>
 </body>
 </html>
