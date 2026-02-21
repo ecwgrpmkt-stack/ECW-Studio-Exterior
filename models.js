@@ -7,10 +7,10 @@ let models = [];
 let currentIndex = 0;
 const viewer = document.querySelector("#viewer3d");
 
-// TIMERS
-let globalIdleTimer = null;       
-let cameraIdleTimer = null;       
-let slideTimer = null;            
+// DECOUPLED TIMERS
+let globalIdleTimer = null;       // Controls the Hand Icon
+let cameraIdleTimer = null;       // Controls the 3D Auto-Rotation
+let slideTimer = null;            // Controls the 60s auto-slide
 let colorEngineTimer = null;   
 
 const IDLE_DELAY = 3000;       
@@ -64,16 +64,16 @@ async function initShowroom() {
         startApp();
 
     } catch (error) {
-        console.warn("API Limit. Loading direct from GitHub...", error);
+        console.warn("API Failed or Empty. Using strict hardcoded fallbacks...", error);
         
         models = [
             {
-                src: `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/models/Single%20Tone/ford_mustang_1965.glb`,
+                src: `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/models/Single%20Tone/Toyota%20H300%20Single%20Tone.glb`,
                 poster: "https://placehold.co/400x300/222/FFF.png?text=No+Preview",
                 variant: "SINGLE TONE"
             },
             {
-                src: `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/models/Two%20Tone/2019_ford_gt_heritage_edition.glb`,
+                src: `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/models/Two%20Tone/Toyota%20H300%20Two%20Tone`,
                 poster: "https://placehold.co/400x300/222/FFF.png?text=No+Preview",
                 variant: "TWO TONE"
             }
@@ -89,6 +89,8 @@ function startApp() {
     buildVariantButtons();
     loadModelData(currentIndex);
     setupEvents();
+    
+    // Kick off the global timers immediately
     resetGlobalTimers(); 
 }
 
@@ -121,21 +123,17 @@ function transitionToModel(index) {
     if (index === currentIndex) return;
 
     const fadeOverlay = document.getElementById('fadeOverlay');
+    const loader = document.getElementById('ecwLoader');
     
     if (typeof ColorEngine !== 'undefined') ColorEngine.reset();
 
-    // CRITICAL CRASH FIX: Wrap camera check in try/catch to prevent freezing
     if (viewer) {
-        try {
-            const orbit = viewer.getCameraOrbit();
-            savedOrbit = { theta: orbit.theta, phi: orbit.phi };
-        } catch(e) {
-            console.warn("Camera not ready, skipping orbit save.");
-            savedOrbit = null;
-        }
+        const orbit = viewer.getCameraOrbit();
+        savedOrbit = { theta: orbit.theta, phi: orbit.phi };
     }
 
     fadeOverlay.classList.add('active');
+    loader.classList.add('active'); 
 
     setTimeout(() => {
         currentIndex = index;
@@ -143,8 +141,10 @@ function transitionToModel(index) {
 
         setTimeout(() => {
             fadeOverlay.classList.remove('active');
+            loader.classList.remove('active');
             resetGlobalTimers(); 
         }, 250); 
+
     }, 250); 
 }
 
@@ -172,48 +172,44 @@ function loadModelData(index) {
     updateVariantButtons();
 }
 
+// -----------------------------------------------------
+// DECOUPLED UX EVENT ARCHITECTURE
+// -----------------------------------------------------
 function setupEvents() {
     document.getElementById("fsBtn").onclick = () => {
         const app = document.getElementById("app");
         !document.fullscreenElement ? app.requestFullscreen() : document.exitFullscreen();
     };
 
+    // 1. GLOBAL INTERACTION: Hides Hand Icon, resets slide timer. Does NOT affect 3D rotation.
+    // Replaced 'pointermove' with 'mousemove/touchstart' to prevent hyper-sensitive jitter bugs.
     ['mousemove', 'mousedown', 'touchstart', 'keydown'].forEach(evt => {
         window.addEventListener(evt, resetGlobalTimers);
     });
 
     if(viewer) {
-        // NATIVE LOADING BAR LOGIC
-        viewer.addEventListener('progress', (event) => {
-            const progressBar = event.target.querySelector('.update-bar');
-            const updatingBar = event.target.querySelector('.progress-bar');
-            if(updatingBar && progressBar) {
-                updatingBar.classList.remove('hide');
-                progressBar.style.width = `${event.detail.totalProgress * 100}%`;
-                if (event.detail.totalProgress === 1) {
-                    setTimeout(() => updatingBar.classList.add('hide'), 500);
-                }
-            }
-        });
-
+        // 2. 3D SPECIFIC INTERACTION: Stops car rotation. Resumes after 3s of letting go.
         viewer.addEventListener('camera-change', (e) => {
             if (e.detail.source === 'user-interaction') {
+                // Stop spinning
                 viewer.autoRotate = false;
                 
+                // Also instantly hide the hand icon when dragging the car
                 const indicator = document.getElementById('idleIndicator');
                 if (indicator) indicator.classList.remove('visible');
 
+                // 3D Resume Timer (3 seconds after they stop dragging)
                 clearTimeout(cameraIdleTimer);
                 cameraIdleTimer = setTimeout(() => {
                     viewer.autoRotate = true;
-                    try {
-                        const currentOrbit = viewer.getCameraOrbit();
-                        viewer.cameraOrbit = `${currentOrbit.theta}rad 75deg auto`;
-                    } catch(e) {}
+                    // Gently correct the vertical pitch so the car looks good again
+                    const currentOrbit = viewer.getCameraOrbit();
+                    viewer.cameraOrbit = `${currentOrbit.theta}rad 75deg auto`;
                 }, IDLE_DELAY);
             }
         });
 
+        // 3. COLOR ENGINE DELAY
         viewer.addEventListener('load', () => {
             if (typeof ColorEngine !== 'undefined') {
                 clearTimeout(colorEngineTimer);
@@ -225,20 +221,24 @@ function setupEvents() {
     }
 }
 
+// Triggers whenever the mouse moves ANYWHERE on the screen (UI, buttons, background)
 function resetGlobalTimers() {
     const indicator = document.getElementById('idleIndicator');
     
+    // Instantly hide the hand icon
     if(indicator && indicator.classList.contains('visible')) {
         indicator.classList.remove('visible');
     }
     
+    // UI Timer: Bring the hand icon back ONLY if absolutely no mouse movement happens for 3 seconds
     clearTimeout(globalIdleTimer);
     globalIdleTimer = setTimeout(() => {
-        if(viewer && viewer.autoRotate && indicator) {
+        if(indicator) {
             indicator.classList.add('visible');
         }
     }, IDLE_DELAY);
 
+    // Slide Timer: Don't advance to the next car if they are busy tweaking colors
     clearTimeout(slideTimer);
     slideTimer = setTimeout(() => {
         if(models.length > 1) {
