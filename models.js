@@ -1,7 +1,6 @@
 // CONFIGURATION
 const REPO_OWNER = "ecwgrpmkt-stack";
 const REPO_NAME = "ECW-Studio";
-const MODEL_FOLDER = "models";
 
 let models = []; 
 let currentIndex = 0;
@@ -16,85 +15,77 @@ let colorEngineTimer = null;
 let savedOrbit = null; 
 let currentBlobUrl = null; 
 
+async function fetchFolderData(folderName, variantName) {
+    try {
+        // Fetch files from the specific subfolder
+        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/models/${encodeURIComponent(folderName)}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            if (response.status === 404) return null; // Folder doesn't exist
+            throw new Error(`GitHub API Error: ${response.status}`);
+        }
+        
+        const files = await response.json();
+        
+        // Find the first GLB in this folder
+        const glbFile = files.find(f => f.name.toLowerCase().endsWith('.glb') || f.name.toLowerCase().includes('tone'));
+        if (!glbFile) return null;
+
+        // Try to find a matching poster in the same folder
+        const baseName = glbFile.name.replace('.glb', '');
+        const pngName = `${baseName}.png`;
+        const posterFile = files.find(f => f.name === pngName);
+
+        return {
+            src: glbFile.download_url,
+            poster: posterFile ? posterFile.download_url : 'https://placehold.co/400x300/222/FFF.png?text=No+Preview',
+            variant: variantName
+        };
+
+    } catch (error) {
+        console.warn(`Could not fetch folder ${folderName}:`, error);
+        return null; // Return null gracefully so the app doesn't crash
+    }
+}
+
 async function initShowroom() {
     const loader = document.getElementById('ecwLoader');
     if(loader) loader.classList.add('active');
 
     try {
-        const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${MODEL_FOLDER}`);
-        if (!response.ok) throw new Error("GitHub API Error (Rate Limit likely).");
+        // Fetch the three folders concurrently for maximum speed
+        const [singleData, twoData, otherData] = await Promise.all([
+            fetchFolderData('Single Tone', 'Single Tone'),
+            fetchFolderData('Two Tone', 'Two Tone'),
+            fetchFolderData('Other', 'Other')
+        ]);
+
+        models = [];
         
-        const files = await response.json();
-        
-        // Loosened filter to catch missing .glb extensions
-        const modelFiles = files.filter(f => 
-            (f.name.toLowerCase().endsWith('.glb') || f.name.toLowerCase().includes('tone') || f.name.toLowerCase().includes('toyota')) 
-            && !f.name.startsWith('disabled_') && !f.name.endsWith('.png')
-        );
+        // Push to array only if the folder existed and had a model
+        if (singleData) models.push(singleData);
+        if (twoData) models.push(twoData);
+        if (otherData) models.push(otherData);
 
-        if (modelFiles.length === 0) throw new Error("No 3D models found.");
-
-        let tempModels = modelFiles.map(glb => {
-            const baseName = glb.name.replace('.glb', '');
-            const pngName = `${baseName}.png`;
-            const posterFile = files.find(f => f.name === pngName);
-            
-            let niceName = baseName.replace(/_/g, ' ').replace(/-/g, ' ');
-            niceName = niceName.replace(/\b\w/g, l => l.toUpperCase());
-
-            return {
-                src: glb.download_url,
-                poster: posterFile ? posterFile.download_url : 'https://placehold.co/400x300/222/FFF.png?text=No+Preview',
-                name: niceName,
-                year: (niceName.match(/\d{4}/) || ["Model"])[0] 
-            };
-        });
-
-        // -----------------------------------------------------
-        // SMART CATEGORIZATION: Build strictly 3 items max
-        // -----------------------------------------------------
-        let singleModel = tempModels.find(m => /(single|one)/i.test(m.name));
-        let twoModel = tempModels.find(m => /(two|dual)/i.test(m.name));
-        let otherModel = tempModels.find(m => !/(single|one|two|dual)/i.test(m.name));
-
-        models = []; // Reset and rigidly map
-        if (singleModel) { singleModel.variant = "Single Tone"; models.push(singleModel); }
-        if (twoModel) { twoModel.variant = "Two Tone"; models.push(twoModel); }
-        if (otherModel) { otherModel.variant = "Other"; models.push(otherModel); }
-
-        if (models.length === 0) {
-            tempModels[0].variant = "Model 1";
-            models.push(tempModels[0]);
-        }
+        if (models.length === 0) throw new Error("No 3D models found in any folders.");
 
         startApp();
 
     } catch (error) {
-        console.warn("API Failed or Rate Limited. Using Hardcoded Fallback Models...", error);
-        if(document.getElementById('infoName')) document.getElementById('infoName').innerText = "API LIMIT REACHED";
+        console.warn("API Failed. Using Hardcoded Fallbacks...", error);
         
-        // Exact fallback mapped to your GitHub repository contents
+        // Fallback testing data just in case API limits hit
         models = [
             {
-                src: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/Toyota%20H300%20Single%20Tone.glb",
+                src: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/Single%20Tone/Toyota_H300.glb",
                 poster: "https://placehold.co/400x300/222/FFF.png?text=No+Preview",
-                name: "Toyota H300 Single Tone",
-                year: "Model",
                 variant: "Single Tone"
             },
             {
-                src: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/Toyota%20H300%20Two%20Tone",
+                src: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/Two%20Tone/Toyota_H300_Two.glb",
                 poster: "https://placehold.co/400x300/222/FFF.png?text=No+Preview",
-                name: "Toyota H300 Two Tone",
-                year: "Model",
                 variant: "Two Tone"
-            },
-            {
-                src: "https://raw.githubusercontent.com/ecwgrpmkt-stack/ECW-Studio/main/models/toyota_corolla_levin_ae92_gt_apex_kouki.glb",
-                poster: "https://placehold.co/400x300/222/FFF.png?text=No+Preview",
-                name: "Toyota Corolla Levin",
-                year: "Model",
-                variant: "Other"
             }
         ];
         startApp();
@@ -116,6 +107,7 @@ function buildVariantButtons() {
     if(!panel) return;
     panel.innerHTML = "";
     
+    // Only creates buttons for models that successfully loaded from folders
     models.forEach((m, index) => {
         const btn = document.createElement("button");
         btn.className = "tone-btn";
@@ -172,13 +164,9 @@ function transitionToModel(index) {
 async function loadModelData(index) {
     if (!models[index]) return;
     const data = models[index];
-    
-    document.getElementById('infoName').innerText = data.name;
-    document.getElementById('infoYear').innerText = data.year;
 
     if(viewer) {
         viewer.poster = data.poster; 
-        viewer.alt = `3D Model of ${data.name}`;
 
         if (currentBlobUrl) {
             URL.revokeObjectURL(currentBlobUrl);
@@ -188,7 +176,6 @@ async function loadModelData(index) {
         try {
             let finalBlob = null;
 
-            // 1. Safe Cache Check
             if ('caches' in window) {
                 const cache = await caches.open('ecw-3d-models-v1');
                 const cachedResponse = await cache.match(data.src);
@@ -199,20 +186,15 @@ async function loadModelData(index) {
                     const res = await fetch(data.src, { mode: 'cors' });
                     if (res.ok) {
                         finalBlob = await res.blob();
-                        // Force correct MIME type regardless of missing extensions
                         finalBlob = new Blob([finalBlob], { type: 'model/gltf-binary' });
                         cache.put(data.src, new Response(finalBlob));
                     }
                 }
             } else {
-                // No cache API available (e.g. running file:// locally)
                 const res = await fetch(data.src, { mode: 'cors' });
-                if (res.ok) {
-                    finalBlob = await res.blob();
-                }
+                if (res.ok) finalBlob = await res.blob();
             }
 
-            // 2. Apply Blob to Viewer (FIXES MISSING .GLB BUG)
             if (finalBlob) {
                 const glbBlob = new Blob([finalBlob], { type: 'model/gltf-binary' });
                 currentBlobUrl = URL.createObjectURL(glbBlob);
@@ -226,7 +208,6 @@ async function loadModelData(index) {
             viewer.src = data.src;
         }
         
-        // Restore orbit
         if (savedOrbit) {
             viewer.cameraOrbit = `${savedOrbit.theta}rad ${savedOrbit.phi}rad auto`;
         } else {
