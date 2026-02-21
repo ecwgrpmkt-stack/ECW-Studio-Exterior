@@ -43,29 +43,34 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 .back-btn { pointer-events: auto; text-decoration: none; color: white; font-weight: 700; font-size: 0.9rem; letter-spacing: 2px; display: flex; flex-direction: column; align-items: center; gap: 5px; opacity: 0.7; transition: opacity 0.3s; }
 .back-btn:hover { opacity: 1; color: #ff3333; }
 .back-btn .arrow { font-size: 1.5rem; line-height: 1; }
-.model-info { text-align: right; color: white; }
-#infoName { margin: 0; font-size: 2rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; line-height: 1; }
-#infoYear { margin: 5px 0 0 0; font-size: 1.2rem; font-weight: 300; color: #ff3333; letter-spacing: 1px; }
 
+/* STATIC HEADER UI */
+.model-info-static {
+    display: flex; align-items: center; gap: 15px; text-align: right;
+}
+.toyota-spin {
+    width: 36px; height: 36px; color: rgba(255,255,255,0.7);
+    animation: spin-slow 8s linear infinite; /* Smooth constant spin */
+}
+@keyframes spin-slow { 100% { transform: rotate(360deg); } }
+
+.brand-text h1 {
+    margin: 0; font-size: 2.2rem; font-weight: 900; 
+    text-transform: uppercase; letter-spacing: 2px; line-height: 1; color: white;
+}
+.brand-text h1 span { color: #ff3333; }
+
+/* DOCK STYLES */
 #bottomDock { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; z-index: 100; pointer-events: none; gap: 15px; }
 .fs-wrapper { pointer-events: auto; }
 #fsBtn { width: 50px; height: 50px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.6); color: white; font-size: 1.4rem; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
 #fsBtn:hover { background: #ff3333; border-color: #ff3333; transform: scale(1.1); }
 
-/* VARIANT BUTTON AREA */
-#bottomDock .thumbnail-bar { pointer-events: auto; display: flex; align-items: center; justify-content: center; background: rgba(30, 30, 30, 0.5); backdrop-filter: blur(15px); border-radius: 30px; padding: 10px 20px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); }
+.thumbnail-bar { pointer-events: auto; display: flex; align-items: center; justify-content: center; background: rgba(30, 30, 30, 0.5); backdrop-filter: blur(15px); border-radius: 30px; padding: 10px 20px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); }
 .variant-btn-area { display: flex; gap: 15px; }
-.tone-btn { 
-    background: transparent; color: #ccc; border: 1px solid transparent; 
-    padding: 10px 25px; border-radius: 20px; font-size: 0.85rem; 
-    font-weight: bold; text-transform: uppercase; cursor: pointer; 
-    transition: all 0.3s; letter-spacing: 1px; outline: none;
-}
+.tone-btn { background: transparent; color: #ccc; border: 1px solid transparent; padding: 10px 25px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: all 0.3s; letter-spacing: 1px; outline: none; }
 .tone-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
-.tone-btn.active { 
-    color: #ff3333; background: rgba(255, 51, 51, 0.1); 
-    border-color: #ff3333; box-shadow: 0 0 15px rgba(255, 51, 51, 0.2); 
-}
+.tone-btn.active { color: #ff3333; background: rgba(255, 51, 51, 0.1); border-color: #ff3333; box-shadow: 0 0 15px rgba(255, 51, 51, 0.2); }
 
 /* =========================================
    4. COLOR EDITOR DOCK
@@ -77,12 +82,10 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 
 .ce-title { font-size: 0.8rem; text-transform: uppercase; font-weight: bold; color: #ff3333; letter-spacing: 2px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
 .ce-section { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; }
-
 .ce-header { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: bold; color: #ccc; text-transform: uppercase; cursor: pointer; user-select: none; }
 .ce-toggle { font-size: 0.7rem; color: #666; transition: transform 0.3s; display: inline-block; }
 .ce-section.collapsed .ce-toggle { transform: rotate(-90deg); }
 .ce-section.collapsed .ce-sliders { display: none; }
-
 .ce-swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); }
 .ce-reset { margin-left: auto; background: transparent; border: 1px solid #444; color: #aaa; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
 .ce-reset:hover { background: #ff3333; color: white; border-color: #ff3333; }
@@ -102,9 +105,7 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 #ecwLoader.active { opacity: 1; pointer-events: all; }
 .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #ff3333; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
 .loader-text { font-weight: 800; letter-spacing: 4px; color: #fff; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* Idle Indicator - MOVED TO TOP: 30% */
 #idleIndicator { position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; opacity: 0; transition: opacity 0.5s; text-align: center; z-index: 50; }
 #idleIndicator.visible { opacity: 1; }
 .hand-icon { font-size: 3rem; animation: swipe 2s infinite ease-in-out; }
@@ -112,7 +113,7 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 @keyframes swipe { 0%, 100% { transform: translateX(-15px); opacity: 0.5; } 50% { transform: translateX(15px); opacity: 1; } }
 
 /* =========================================
-   6. 360 GALLERY & ADMIN FALLBACKS
+   6. ADMIN & GALLERY FALLBACKS
    ========================================= */
 #viewer { flex: 1; height: 100%; z-index: 1; outline: none; }
 #sidebar { width: 170px; background: #111; z-index: 20; border-right: 1px solid #222; display: flex; flex-direction: column; height: 100%; }
@@ -120,7 +121,6 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 #thumbPanel { overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; flex: 1; }
 #sidebar .thumb { width: 100%; height: 90px; border-radius: 6px; object-fit: cover; opacity: 0.6; transition: 0.3s; cursor: pointer; border: 2px solid transparent; }
 #sidebar .thumb:hover, #sidebar .thumb.active { opacity: 1; border-color: #ff3333; }
-
 #drawingCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; pointer-events: none; visibility: hidden; cursor: crosshair; }
 #drawingCanvas.active { visibility: visible; pointer-events: auto; }
 #drawingToolbar { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 110; background: rgba(20, 20, 20, 0.8); padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
@@ -133,7 +133,6 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 #controls { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; z-index: 90; }
 #controls button { width: 60px; height: 60px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.5); color: white; font-size: 1.5rem; cursor: pointer; backdrop-filter: blur(5px); transition: all 0.3s; }
 
-/* Admin Base */
 .login-container { width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .access-split { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
 .access-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 12px; width: 300px; text-align: center; transition: transform 0.3s; }
@@ -141,7 +140,6 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 .dev-btn { background: #333; color: white; }
 input[type="text"], input[type="password"] { width: 100%; padding: 12px; margin-bottom: 10px; background: rgba(0,0,0,0.3); border: 1px solid #333; color: white; border-radius: 4px; box-sizing: border-box; }
 .error-msg { color: #ff3333; display: none; margin-top: 10px; font-size: 0.9rem; }
-
 body.admin-body { overflow: auto; background: #0d0d0d; }
 .admin-nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: #111; border-bottom: 1px solid #333; }
 .logo { font-weight: bold; font-size: 1.5rem; }
@@ -175,9 +173,8 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
     .hero-cards { flex-direction: column; align-items: center; gap: 20px; }
     .hero-card { width: 90%; height: 140px; flex-direction: row; padding: 0 20px; }
     .card-inner { flex-direction: row; width: 100%; justify-content: flex-start; gap: 20px; padding: 0; }
-    #bottomDock .thumbnail-bar { max-width: 95%; padding: 10px; }
     .variant-btn-area { flex-wrap: wrap; justify-content: center; gap: 8px; }
     .tone-btn { padding: 8px 15px; font-size: 0.75rem; }
-    #infoName { font-size: 1.5rem; }
+    .model-info-static h1 { font-size: 1.5rem; }
     .color-editor-dock { display: none; }
 }
