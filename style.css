@@ -44,27 +44,12 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 .back-btn:hover { opacity: 1; color: #ff3333; }
 .back-btn .arrow { font-size: 1.5rem; line-height: 1; }
 
-/* STATIC HEADER UI WITH HORIZONTAL SPIN */
-.model-info-static {
-    display: flex; align-items: center; gap: 15px; text-align: right;
-}
-.toyota-spin {
-    width: 36px; height: 36px; color: rgba(255,255,255,0.7);
-    animation: spin-horizontal 6s linear infinite; /* Smooth horizontal orbit */
-}
-/* RotateY creates the horizontal spinning coin effect */
-@keyframes spin-horizontal { 
-    0% { transform: rotateY(0deg); }
-    100% { transform: rotateY(360deg); } 
-}
-
-.brand-text h1 {
-    margin: 0; font-size: 2.2rem; font-weight: 900; 
-    text-transform: uppercase; letter-spacing: 2px; line-height: 1; color: white;
-}
+.model-info-static { display: flex; align-items: center; gap: 15px; text-align: right; }
+.toyota-spin { width: 36px; height: 36px; color: rgba(255,255,255,0.7); animation: spin-horizontal 6s linear infinite; }
+@keyframes spin-horizontal { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
+.brand-text h1 { margin: 0; font-size: 2.2rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; line-height: 1; color: white; }
 .brand-text h1 span { color: #ff3333; }
 
-/* DOCK STYLES */
 #bottomDock { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; z-index: 100; pointer-events: none; gap: 15px; }
 .fs-wrapper { pointer-events: auto; }
 #fsBtn { width: 50px; height: 50px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.6); color: white; font-size: 1.4rem; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
@@ -111,7 +96,6 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 .loader-text { font-weight: 800; letter-spacing: 4px; color: #fff; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* Idle Indicator */
 #idleIndicator { position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; opacity: 0; transition: opacity 0.5s; text-align: center; z-index: 50; }
 #idleIndicator.visible { opacity: 1; }
 .hand-icon { font-size: 3rem; animation: swipe 2s infinite ease-in-out; }
@@ -119,7 +103,7 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 @keyframes swipe { 0%, 100% { transform: translateX(-15px); opacity: 0.5; } 50% { transform: translateX(15px); opacity: 1; } }
 
 /* =========================================
-   6. 360 GALLERY & ADMIN FALLBACKS
+   6. ADMIN & GALLERY FALLBACKS
    ========================================= */
 #viewer { flex: 1; height: 100%; z-index: 1; outline: none; }
 #sidebar { width: 170px; background: #111; z-index: 20; border-right: 1px solid #222; display: flex; flex-direction: column; height: 100%; }
@@ -178,7 +162,6 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
     .hero-brand { font-size: 3rem; }
     .hero-cards { flex-direction: column; align-items: center; gap: 20px; }
     .hero-card { width: 90%; height: 140px; flex-direction: row; padding: 0 20px; }
-    .card-inner { flex-direction: row; width: 100%; justify-content: flex-start; gap: 20px; padding: 0; }
     .variant-btn-area { flex-wrap: wrap; justify-content: center; gap: 8px; }
     .tone-btn { padding: 8px 15px; font-size: 0.75rem; }
     .model-info-static h1 { font-size: 1.5rem; }
