@@ -7,7 +7,7 @@ let models = [];
 let currentIndex = 0;
 const viewer = document.querySelector("#viewer3d");
 
-// TIMERS
+// TIMERS & STATE
 let idleTimer = null;
 let slideTimer = null; 
 const IDLE_DELAY = 3000;       
@@ -33,8 +33,7 @@ async function initShowroom() {
         const getModelFromFolder = (folderName, variantName) => {
             const folderPrefix = `models/${folderName}/`;
             
-            // CRITICAL FIX: Only grab files ending in .glb, OR files with NO extension at all
-            // This prevents hidden files like .DS_Store from crashing the 3D engine
+            // Only grab files ending in .glb, OR files with NO extension at all
             const modelItem = modelFiles.find(f => {
                 if (!f.path.startsWith(folderPrefix)) return false;
                 const fileName = f.path.split('/').pop();
@@ -43,7 +42,6 @@ async function initShowroom() {
             
             if (!modelItem) return null; 
 
-            // Find the poster image in the same folder
             const posterItem = modelFiles.find(f => f.path.startsWith(folderPrefix) && f.path.endsWith('.png'));
 
             return {
@@ -61,24 +59,24 @@ async function initShowroom() {
 
         if (singleData) models.push(singleData);
         if (twoData) models.push(twoData);
-        if (otherData) models.push(otherData); // Renders only if folder has a valid model
+        if (otherData) models.push(otherData); 
 
         if (models.length === 0) throw new Error("No valid 3D files found in folders.");
 
         startApp();
 
     } catch (error) {
-        console.warn("API Failed or Empty. Using strict hardcoded fallbacks...", error);
+        console.warn("API Failed. Using strict hardcoded fallbacks to your Ford Models...", error);
         
-        // Exact fallback mappings guaranteeing it works even if you are API blocked
+        // Exact fallback mappings to your current Ford models. Ensures UI works even if API is blocked.
         models = [
             {
-                src: `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/models/Single%20Tone/Toyota%20H300%20Single%20Tone.glb`,
+                src: `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/models/Single%20Tone/ford_mustang_1965.glb`,
                 poster: "https://placehold.co/400x300/222/FFF.png?text=No+Preview",
                 variant: "SINGLE TONE"
             },
             {
-                src: `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/models/Two%20Tone/Toyota%20H300%20Two%20Tone`,
+                src: `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/models/Two%20Tone/2019_ford_gt_heritage_edition.glb`,
                 poster: "https://placehold.co/400x300/222/FFF.png?text=No+Preview",
                 variant: "TWO TONE"
             }
@@ -138,7 +136,6 @@ function transitionToModel(index) {
     fadeOverlay.classList.add('active');
     loader.classList.add('active'); 
 
-    // Using stable setTimeouts to ensure UI doesn't freeze
     setTimeout(() => {
         currentIndex = index;
         loadModelData(currentIndex);
@@ -161,6 +158,7 @@ function loadModelData(index) {
 
         // CRITICAL EXTENSION FIX: 
         // Force the viewer to treat extensionless files as valid binaries using a hash map
+        // Bypasses the need for heavy ArrayBuffers so the browser doesn't freeze.
         let finalSrc = data.src;
         if (!finalSrc.toLowerCase().includes('.glb') && !finalSrc.toLowerCase().includes('.gltf')) {
             finalSrc += '#.glb';
