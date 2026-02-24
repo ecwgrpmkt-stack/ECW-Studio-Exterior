@@ -215,7 +215,7 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
 }
 
 /* =========================================================
-   MOBILE RESPONSIVE PATCH - 3D EXTERIOR VIEWER (V2)
+   MOBILE RESPONSIVE PATCH - 3D EXTERIOR VIEWER (V3)
    ========================================================= */
 
 /* Global Mobile Cleanups */
@@ -233,24 +233,34 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
     .toyota-spin { width: 30px !important; height: 30px !important; margin-top: 0 !important; }
 }
 
-/* A. PORTRAIT MODE (Vertical Phone) */
+/* A. PORTRAIT MODE (Vertical Phone) - Ultra Compact Panel */
 @media (max-width: 900px) and (orientation: portrait) {
-    /* Bring panel ABOVE the model, reduce size drastically */
+    /* Pin to top, expand width, compress height */
     .color-editor-dock {
-        top: 75px !important; bottom: auto !important; left: 50% !important; 
-        transform: translateX(-50%) scale(0.85) !important; /* Scaled down */
-        transform-origin: top center !important;
-        width: 100% !important; max-width: 320px !important;
-        padding: 15px !important; max-height: 40vh !important;
-        z-index: 250 !important; display: block !important;
+        top: 60px !important; bottom: auto !important; left: 50% !important; 
+        transform: translateX(-50%) !important; 
+        width: 95% !important; max-width: none !important;
+        padding: 10px !important; max-height: 40vh !important;
+        z-index: 250 !important; 
+        display: flex !important; flex-wrap: wrap !important; justify-content: space-between !important;
     }
     
-    .dock-header h3 { font-size: 0.9rem !important; margin-bottom: 10px !important; }
-    .rgb-picker-module { margin-bottom: 10px !important; }
-    .picker-wrapper { padding: 6px 10px !important; }
-    .picker-wrapper input[type="color"] { width: 28px !important; height: 28px !important; }
-    .hex-display { font-size: 0.9rem !important; }
-    .sliders-container { padding-top: 10px !important; }
+    /* Compress Header */
+    .dock-header { width: 100% !important; }
+    .dock-header h3 { font-size: 0.75rem !important; margin-bottom: 5px !important; text-align: center !important; border: none !important; padding-bottom: 0 !important; }
+    
+    /* Side-by-Side Pickers & Hide Hex Code */
+    .rgb-picker-module { width: 48% !important; margin-bottom: 0 !important; }
+    .module-title-row { margin-bottom: 4px !important; }
+    .module-label { font-size: 0.55rem !important; }
+    .hex-display { display: none !important; } /* Hides the code to save space */
+    .picker-wrapper { padding: 4px !important; justify-content: center !important; }
+    .picker-wrapper input[type="color"] { width: 30px !important; height: 30px !important; }
+    
+    /* Compress Sliders */
+    .sliders-container { width: 100% !important; padding-top: 5px !important; margin-top: 5px !important; border-top: 1px solid rgba(255,255,255,0.05) !important; }
+    .slider-module { margin-bottom: 5px !important; }
+    .slider-module input[type="range"] { margin-top: 2px !important; }
 
     /* Force Variant Buttons into a single horizontal row */
     #bottomDock { bottom: 15px !important; }
