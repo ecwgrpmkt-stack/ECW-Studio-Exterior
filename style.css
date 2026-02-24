@@ -213,3 +213,28 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
     .toyota-spin { width: 30px; height: 30px; }
     .color-editor-dock { display: none; }
 }
+
+/* =========================================================
+   QUICK MOBILE PATCH - 3D EXTERIOR VIEWER
+   ========================================================= */
+@media (max-width: 800px) {
+    /* Shrink Top Nav */
+    .top-ui-bar { padding: 15px 20px !important; }
+    .brand-text h1 { font-size: 1.5rem !important; }
+    .toyota-spin { width: 35px !important; height: 35px !important; }
+
+    /* Reposition the RGB Dock to the top center and scale it down */
+    .color-editor-dock { 
+        top: 90px !important; 
+        left: 50% !important; 
+        transform: translateX(-50%) !important;
+        width: 90% !important; 
+        max-height: 40vh !important; 
+        padding: 15px !important;
+    }
+
+    /* Wrap the variant buttons so they don't bleed off screen */
+    .thumbnail-bar { padding: 10px !important; width: 90% !important; }
+    .variant-btn-area { flex-wrap: wrap !important; justify-content: center !important; gap: 8px !important; }
+    .tone-btn { padding: 8px 12px !important; font-size: 0.75rem !important; }
+}
