@@ -215,26 +215,50 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
 }
 
 /* =========================================================
-   QUICK MOBILE PATCH - 3D EXTERIOR VIEWER
+   MOBILE RESPONSIVE PATCH - 3D EXTERIOR VIEWER
    ========================================================= */
-@media (max-width: 800px) {
-    /* Shrink Top Nav */
-    .top-ui-bar { padding: 15px 20px !important; }
-    .brand-text h1 { font-size: 1.5rem !important; }
-    .toyota-spin { width: 35px !important; height: 35px !important; }
 
-    /* Reposition the RGB Dock to the top center and scale it down */
-    .color-editor-dock { 
-        top: 90px !important; 
-        left: 50% !important; 
-        transform: translateX(-50%) !important;
-        width: 90% !important; 
-        max-height: 40vh !important; 
-        padding: 15px !important;
+/* A. PORTRAIT MODE (Vertical Phone) */
+@media (max-width: 900px) and (orientation: portrait) {
+    /* Bring the missing dock back and anchor it to the bottom */
+    .color-editor-dock {
+        top: auto !important; bottom: 110px !important; left: 50% !important; 
+        transform: translateX(-50%) !important; width: 92% !important; 
+        max-height: 45vh !important; padding: 15px !important;
+        display: flex !important; flex-wrap: wrap !important; justify-content: space-between !important;
+        z-index: 200 !important;
+    }
+    
+    /* Make the pickers sit side-by-side to save space */
+    .dock-header { width: 100% !important; margin-bottom: 10px !important; }
+    .rgb-picker-module { width: 48% !important; margin-bottom: 5px !important; }
+    .picker-wrapper { padding: 8px !important; gap: 8px !important; }
+    .hex-display { font-size: 0.9rem !important; }
+    
+    .sliders-container { width: 100% !important; border-top: none !important; padding-top: 0 !important; }
+    .top-ui-bar { padding: 15px !important; }
+    .brand-text h1 { font-size: 1.5rem !important; }
+}
+
+/* B. LANDSCAPE MODE (Sideways Phone) */
+@media (max-height: 600px) and (orientation: landscape) {
+    /* Shrink the top bar so it doesn't block the car roof */
+    .top-ui-bar { padding: 10px 20px !important; }
+    .toyota-spin { width: 35px !important; height: 35px !important; }
+    .brand-text h1 { font-size: 1.2rem !important; }
+
+    /* Move the color dock to the far left, narrow and scrollable */
+    .color-editor-dock {
+        top: 60px !important; left: 15px !important; transform: none !important;
+        width: 230px !important; max-height: 75vh !important; padding: 15px !important;
+        z-index: 200 !important;
     }
 
-    /* Wrap the variant buttons so they don't bleed off screen */
-    .thumbnail-bar { padding: 10px !important; width: 90% !important; }
-    .variant-btn-area { flex-wrap: wrap !important; justify-content: center !important; gap: 8px !important; }
-    .tone-btn { padding: 8px 12px !important; font-size: 0.75rem !important; }
+    /* Move variant buttons to the right so they don't overlap the color dock */
+    #bottomDock { 
+        bottom: 15px !important; left: auto !important; right: 20px !important; 
+        width: auto !important; flex-direction: row-reverse !important; 
+    }
+    .thumbnail-bar { padding: 5px 15px !important; }
+    .fs-wrapper { display: none !important; } /* Hide FS button in landscape to save space */
 }
