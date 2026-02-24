@@ -215,19 +215,12 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
 }
 
 /* =========================================================
-   MOBILE RESPONSIVE PATCH - 3D EXTERIOR VIEWER (V4)
+   MOBILE RESPONSIVE PATCH - 3D EXTERIOR VIEWER (V5)
    ========================================================= */
-
-/* Global Mobile Cleanups */
 @media (max-width: 900px) {
-    /* Hide the Hand Icon & Drag Text entirely */
     #idleIndicator { display: none !important; opacity: 0 !important; visibility: hidden !important; }
-    
-    /* Make the Back button smaller */
     .back-btn { font-size: 0.65rem !important; letter-spacing: 1px !important; }
     .back-btn .arrow { font-size: 1.1rem !important; }
-    
-    /* Shrink the Top Nav branding */
     .top-ui-bar { padding: 15px !important; z-index: 300 !important; }
     .brand-text h1 { font-size: 1.2rem !important; }
     .toyota-spin { width: 30px !important; height: 30px !important; margin-top: 0 !important; }
@@ -247,7 +240,6 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
         align-items: flex-start !important;
     }
     
-    /* Compress Header */
     .dock-header { width: 100% !important; margin: 0 !important; padding: 0 !important; }
     .dock-header h3 { font-size: 0.8rem !important; margin-bottom: 8px !important; text-align: center !important; border: none !important; }
     
@@ -255,8 +247,7 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
     .rgb-picker-module { 
         width: 48% !important; 
         flex: 0 0 48% !important; /* Absolutely forces side-by-side */
-        margin-bottom: 0 !important; 
-        box-sizing: border-box !important;
+        margin-bottom: 0 !important; box-sizing: border-box !important;
     }
     .module-title-row { margin-bottom: 4px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
     .module-label { font-size: 0.55rem !important; line-height: 1 !important; }
@@ -267,7 +258,6 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
     .picker-wrapper { padding: 4px !important; justify-content: center !important; min-height: 36px !important; }
     .picker-wrapper input[type="color"] { width: 28px !important; height: 28px !important; }
     
-    /* Compress Sliders to the bottom of the dock */
     .sliders-container { width: 100% !important; padding-top: 5px !important; margin-top: 5px !important; border-top: 1px solid rgba(255,255,255,0.1) !important; }
     .slider-module { margin-bottom: 2px !important; }
     .slider-module input[type="range"] { margin-top: 0 !important; }
@@ -275,14 +265,8 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
     /* Force Variant Buttons into a single horizontal row */
     #bottomDock { bottom: 15px !important; }
     .thumbnail-bar { padding: 8px 10px !important; width: 95% !important; border-radius: 15px !important; }
-    .variant-btn-area { 
-        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; 
-        justify-content: space-between !important; width: 100% !important; gap: 5px !important;
-    }
-    .tone-btn { 
-        padding: 8px 5px !important; font-size: 0.6rem !important; 
-        flex: 1 !important; text-align: center !important; white-space: nowrap !important;
-    }
+    .variant-btn-area { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; justify-content: space-between !important; width: 100% !important; gap: 5px !important; }
+    .tone-btn { padding: 8px 5px !important; font-size: 0.6rem !important; flex: 1 !important; text-align: center !important; white-space: nowrap !important; }
 }
 
 /* B. LANDSCAPE MODE (Sideways Phone) */
@@ -293,10 +277,7 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
         width: 260px !important; max-height: calc(100% - 75px) !important; padding: 15px !important;
         z-index: 300 !important; display: block !important; overflow-y: auto !important;
     }
-    #bottomDock { 
-        bottom: 15px !important; left: auto !important; right: 15px !important; 
-        width: auto !important; flex-direction: row-reverse !important; 
-    }
+    #bottomDock { bottom: 15px !important; left: auto !important; right: 15px !important; width: auto !important; flex-direction: row-reverse !important; }
     .thumbnail-bar { padding: 5px 15px !important; border-radius: 20px !important; }
     .tone-btn { padding: 6px 12px !important; font-size: 0.65rem !important; }
     .fs-wrapper { display: none !important; } 
