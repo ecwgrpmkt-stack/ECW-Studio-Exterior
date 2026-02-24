@@ -215,7 +215,7 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
 }
 
 /* =========================================================
-   MOBILE RESPONSIVE PATCH - 3D EXTERIOR VIEWER (V3)
+   MOBILE RESPONSIVE PATCH - 3D EXTERIOR VIEWER (V4)
    ========================================================= */
 
 /* Global Mobile Cleanups */
@@ -233,34 +233,44 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
     .toyota-spin { width: 30px !important; height: 30px !important; margin-top: 0 !important; }
 }
 
-/* A. PORTRAIT MODE (Vertical Phone) - Ultra Compact Panel */
+/* A. PORTRAIT MODE (Vertical Phone) - Strict Side-By-Side */
 @media (max-width: 900px) and (orientation: portrait) {
-    /* Pin to top, expand width, compress height */
     .color-editor-dock {
-        top: 60px !important; bottom: auto !important; left: 50% !important; 
+        top: 70px !important; bottom: auto !important; left: 50% !important; 
         transform: translateX(-50%) !important; 
-        width: 95% !important; max-width: none !important;
-        padding: 10px !important; max-height: 40vh !important;
+        width: 92% !important; max-width: none !important;
+        padding: 10px 15px !important; max-height: auto !important;
         z-index: 250 !important; 
-        display: flex !important; flex-wrap: wrap !important; justify-content: space-between !important;
+        /* Enforce Flexbox Row Wrapping */
+        display: flex !important; flex-direction: row !important; 
+        flex-wrap: wrap !important; justify-content: space-between !important;
+        align-items: flex-start !important;
     }
     
     /* Compress Header */
-    .dock-header { width: 100% !important; }
-    .dock-header h3 { font-size: 0.75rem !important; margin-bottom: 5px !important; text-align: center !important; border: none !important; padding-bottom: 0 !important; }
+    .dock-header { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    .dock-header h3 { font-size: 0.8rem !important; margin-bottom: 8px !important; text-align: center !important; border: none !important; }
     
-    /* Side-by-Side Pickers & Hide Hex Code */
-    .rgb-picker-module { width: 48% !important; margin-bottom: 0 !important; }
-    .module-title-row { margin-bottom: 4px !important; }
-    .module-label { font-size: 0.55rem !important; }
-    .hex-display { display: none !important; } /* Hides the code to save space */
-    .picker-wrapper { padding: 4px !important; justify-content: center !important; }
-    .picker-wrapper input[type="color"] { width: 30px !important; height: 30px !important; }
+    /* STRICT Side-by-Side Constraints */
+    .rgb-picker-module { 
+        width: 48% !important; 
+        flex: 0 0 48% !important; /* Absolutely forces side-by-side */
+        margin-bottom: 0 !important; 
+        box-sizing: border-box !important;
+    }
+    .module-title-row { margin-bottom: 4px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
+    .module-label { font-size: 0.55rem !important; line-height: 1 !important; }
+    .reset-btn { padding: 0 4px !important; font-size: 0.7rem !important; margin: 0 !important; }
     
-    /* Compress Sliders */
-    .sliders-container { width: 100% !important; padding-top: 5px !important; margin-top: 5px !important; border-top: 1px solid rgba(255,255,255,0.05) !important; }
-    .slider-module { margin-bottom: 5px !important; }
-    .slider-module input[type="range"] { margin-top: 2px !important; }
+    /* Center the Color Circles and Hide Hex */
+    .hex-display { display: none !important; } 
+    .picker-wrapper { padding: 4px !important; justify-content: center !important; min-height: 36px !important; }
+    .picker-wrapper input[type="color"] { width: 28px !important; height: 28px !important; }
+    
+    /* Compress Sliders to the bottom of the dock */
+    .sliders-container { width: 100% !important; padding-top: 5px !important; margin-top: 5px !important; border-top: 1px solid rgba(255,255,255,0.1) !important; }
+    .slider-module { margin-bottom: 2px !important; }
+    .slider-module input[type="range"] { margin-top: 0 !important; }
 
     /* Force Variant Buttons into a single horizontal row */
     #bottomDock { bottom: 15px !important; }
@@ -275,24 +285,19 @@ body.admin-body { overflow: auto; background: #0d0d0d; }
     }
 }
 
-/* B. LANDSCAPE MODE (Sideways Phone) - The "Disappearing" Fix */
+/* B. LANDSCAPE MODE (Sideways Phone) */
 @media (max-height: 600px) and (orientation: landscape) {
-    /* Use fixed bounds to prevent the URL bar from pushing it off-screen */
     .color-editor-dock {
         position: fixed !important; top: 60px !important; left: 10px !important; bottom: 15px !important;
         transform: scale(0.8) !important; transform-origin: top left !important;
         width: 260px !important; max-height: calc(100% - 75px) !important; padding: 15px !important;
         z-index: 300 !important; display: block !important; overflow-y: auto !important;
     }
-
-    /* Move variant buttons to the right to leave space for the color dock */
     #bottomDock { 
         bottom: 15px !important; left: auto !important; right: 15px !important; 
         width: auto !important; flex-direction: row-reverse !important; 
     }
     .thumbnail-bar { padding: 5px 15px !important; border-radius: 20px !important; }
     .tone-btn { padding: 6px 12px !important; font-size: 0.65rem !important; }
-    
-    /* Hide FS button in landscape to save critical space */
     .fs-wrapper { display: none !important; } 
 }
