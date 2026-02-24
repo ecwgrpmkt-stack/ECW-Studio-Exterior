@@ -84,15 +84,27 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
     border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px; 
 }
 
-.rgb-picker-module { margin-bottom: 15px; }
-.rgb-picker-module label { 
-    display: block; color: #aaa; font-size: 0.75rem; letter-spacing: 2px; 
-    margin-bottom: 8px; font-weight: bold; 
+/* Module Layout & Resets */
+.module-title-row {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
 }
+.module-label { 
+    color: #aaa; font-size: 0.75rem; letter-spacing: 2px; font-weight: bold; 
+}
+.reset-btn {
+    background: transparent; border: 1px solid #444; color: #aaa; 
+    border-radius: 4px; padding: 2px 6px; cursor: pointer; 
+    font-size: 0.75rem; transition: 0.2s; outline: none; display: flex; align-items: center; justify-content: center;
+}
+.reset-btn:hover { background: #ff3333; color: white; border-color: #ff3333; transform: rotate(-90deg); }
+
+.rgb-picker-module { margin-bottom: 15px; }
+
+/* The wrapper is now a label, meaning clicking anywhere on it triggers the input! */
 .picker-wrapper { 
     display: flex; align-items: center; gap: 15px; background: #050505; 
     border: 1px solid #333; padding: 10px 12px; border-radius: 8px; 
-    transition: border-color 0.3s; 
+    transition: border-color 0.3s; cursor: pointer; width: 100%; box-sizing: border-box;
 }
 .picker-wrapper:hover { border-color: rgba(255, 51, 51, 0.5); }
 .picker-wrapper input[type="color"] { 
@@ -105,17 +117,13 @@ model-viewer { width: 100%; height: 100%; --poster-color: transparent; backgroun
 }
 .picker-wrapper input[type="color"]:hover::-webkit-color-swatch { border-color: white; }
 .picker-wrapper input[type="color"]:disabled { opacity: 0.3; cursor: not-allowed; }
-.hex-display { color: white; font-family: monospace; font-size: 1.1rem; letter-spacing: 2px; }
+.hex-display { color: white; font-family: monospace; font-size: 1.1rem; letter-spacing: 2px; cursor: pointer; }
 
 .sliders-container { border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 15px; margin-top: 5px; }
 .slider-module { margin-bottom: 15px; }
-.slider-module label { 
-    display: block; color: #aaa; font-size: 0.75rem; letter-spacing: 2px; 
-    margin-bottom: 10px; font-weight: bold; 
-}
 .slider-module input[type="range"] { 
     -webkit-appearance: none; width: 100%; background: #333; 
-    height: 4px; border-radius: 2px; outline: none; cursor: pointer; 
+    height: 4px; border-radius: 2px; outline: none; cursor: pointer; margin-top: 5px;
 }
 .slider-module input[type="range"]::-webkit-slider-thumb { 
     -webkit-appearance: none; width: 18px; height: 18px; 
