@@ -12,16 +12,6 @@ const ColorEngine = {
     secondaryPicker: null,
     secondaryHex: null,
     brightnessSlider: null,
-    
-    // Reset Buttons
-    resetPrimaryBtn: null,
-    resetSecondaryBtn: null,
-    resetBrightnessBtn: null,
-
-    // State Memory (To remember original colors)
-    initialPrimaryHex: "#FFFFFF",
-    initialSecondaryHex: "#000000",
-
     isInitialized: false,
 
     init() {
@@ -31,10 +21,6 @@ const ColorEngine = {
         this.secondaryHex = document.getElementById("secondaryHexDisplay");
         this.brightnessSlider = document.getElementById("brightnessSlider");
         
-        this.resetPrimaryBtn = document.getElementById("resetPrimaryBtn");
-        this.resetSecondaryBtn = document.getElementById("resetSecondaryBtn");
-        this.resetBrightnessBtn = document.getElementById("resetBrightnessBtn");
-
         this.bindEvents();
         this.isInitialized = true;
     },
@@ -86,7 +72,8 @@ const ColorEngine = {
             const b = (Math.round(color[2] * 10) / 10).toFixed(1);
             const clusterKey = `${r},${g},${b}`;
 
-            // Semantic Scoring
+            // THE FIX: Semantic Scoring. 
+            // Paint parts get a massive +50 boost so they beat the 100 tiny black bolts.
             let score = 1; 
             if (paintKeywords.some(word => matName.includes(word))) {
                 score += 50; 
@@ -106,26 +93,20 @@ const ColorEngine = {
 
         if (sortedKeys.length > 0) {
             this.primaryMaterials = colorClusters[sortedKeys[0]].materials;
-            this.initialPrimaryHex = this.rgbArrayToHex(colorClusters[sortedKeys[0]].originalRgb); // Save to memory
-            
-            this.primaryPicker.value = this.initialPrimaryHex;
-            this.primaryHex.innerText = this.initialPrimaryHex;
+            const initialHex = this.rgbArrayToHex(colorClusters[sortedKeys[0]].originalRgb);
+            this.primaryPicker.value = initialHex;
+            this.primaryHex.innerText = initialHex;
             this.primaryPicker.disabled = false;
         }
 
         if (sortedKeys.length > 1) {
             this.secondaryMaterials = colorClusters[sortedKeys[1]].materials;
-            this.initialSecondaryHex = this.rgbArrayToHex(colorClusters[sortedKeys[1]].originalRgb); // Save to memory
-            
-            this.secondaryPicker.value = this.initialSecondaryHex;
-            this.secondaryHex.innerText = this.initialSecondaryHex;
+            const initialHex = this.rgbArrayToHex(colorClusters[sortedKeys[1]].originalRgb);
+            this.secondaryPicker.value = initialHex;
+            this.secondaryHex.innerText = initialHex;
             this.secondaryPicker.disabled = false;
         }
         
-        // Ensure brightness starts at default when analyzing a new model
-        this.brightnessSlider.value = "1.0";
-        this.viewer.exposure = 1.0;
-
         // Show dock
         const dock = document.getElementById('colorEditorDock');
         if (dock) {
@@ -135,7 +116,6 @@ const ColorEngine = {
     },
 
     bindEvents() {
-        // Picker Events
         this.primaryPicker.addEventListener('input', (e) => {
             const hex = e.target.value;
             this.primaryHex.innerText = hex.toUpperCase();
@@ -156,28 +136,6 @@ const ColorEngine = {
 
         this.brightnessSlider.addEventListener('input', (e) => {
             if (this.viewer) this.viewer.exposure = parseFloat(e.target.value);
-        });
-
-        // Reset Button Events
-        this.resetPrimaryBtn.addEventListener('click', () => {
-            if(this.primaryMaterials.length === 0) return;
-            this.primaryPicker.value = this.initialPrimaryHex;
-            this.primaryHex.innerText = this.initialPrimaryHex;
-            const rgba = this.hexToNormalizedRGB(this.initialPrimaryHex);
-            this.primaryMaterials.forEach(mat => mat.pbrMetallicRoughness.setBaseColorFactor(rgba));
-        });
-
-        this.resetSecondaryBtn.addEventListener('click', () => {
-            if(this.secondaryMaterials.length === 0) return;
-            this.secondaryPicker.value = this.initialSecondaryHex;
-            this.secondaryHex.innerText = this.initialSecondaryHex;
-            const rgba = this.hexToNormalizedRGB(this.initialSecondaryHex);
-            this.secondaryMaterials.forEach(mat => mat.pbrMetallicRoughness.setBaseColorFactor(rgba));
-        });
-
-        this.resetBrightnessBtn.addEventListener('click', () => {
-            this.brightnessSlider.value = "1.0";
-            if(this.viewer) this.viewer.exposure = 1.0;
         });
     },
 
