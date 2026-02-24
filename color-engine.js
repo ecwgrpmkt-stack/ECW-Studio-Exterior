@@ -12,7 +12,6 @@ const ColorEngine = {
     secondaryPicker: null,
     secondaryHex: null,
     brightnessSlider: null,
-    contrastSlider: null,
     isInitialized: false,
 
     init() {
@@ -21,7 +20,6 @@ const ColorEngine = {
         this.secondaryPicker = document.getElementById("secondaryColorPicker");
         this.secondaryHex = document.getElementById("secondaryHexDisplay");
         this.brightnessSlider = document.getElementById("brightnessSlider");
-        this.contrastSlider = document.getElementById("contrastSlider");
         
         this.bindEvents();
         this.isInitialized = true;
@@ -53,10 +51,14 @@ const ColorEngine = {
         const materials = viewer.model.materials;
         const colorClusters = {};
         
-        // Exclude materials that shouldn't be painted
-        const ignoreList = ['glass', 'tire', 'rubber', 'window', 'transparent', 'chrome', 'wheel', 'lens', 'light', 'interior', 'dash'];
+        // Exclude un-paintable parts strictly
+        const ignoreList = ['glass', 'tire', 'rubber', 'window', 'transparent', 'chrome', 'wheel', 'lens', 'light', 'interior', 'dash', 'engine', 'grill', 'plastic', 'bolt', 'under'];
+        
+        // Priority Keywords: Finding these guarantees it's the actual car body
+        const paintKeywords = ['paint', 'body', 'exterior', 'shell', 'skin', 'primary', 'secondary', 'stripe', 'livery', 'color', 'metal', 'hood', 'door'];
 
         materials.forEach(mat => {
+            if (!mat.name) return;
             const matName = mat.name.toLowerCase();
             const isIgnored = ignoreList.some(word => matName.includes(word));
             
@@ -64,20 +66,29 @@ const ColorEngine = {
 
             const color = mat.pbrMetallicRoughness.baseColorFactor;
             
-            // Grouping by rounding to 1 decimal place
+            // Grouping by rounding
             const r = (Math.round(color[0] * 10) / 10).toFixed(1);
             const g = (Math.round(color[1] * 10) / 10).toFixed(1);
             const b = (Math.round(color[2] * 10) / 10).toFixed(1);
             const clusterKey = `${r},${g},${b}`;
 
+            // THE FIX: Semantic Scoring. 
+            // Paint parts get a massive +50 boost so they beat the 100 tiny black bolts.
+            let score = 1; 
+            if (paintKeywords.some(word => matName.includes(word))) {
+                score += 50; 
+            }
+
             if (!colorClusters[clusterKey]) {
-                colorClusters[clusterKey] = { materials: [], originalRgb: color };
+                colorClusters[clusterKey] = { materials: [], originalRgb: color, score: 0 };
             }
             colorClusters[clusterKey].materials.push(mat);
+            colorClusters[clusterKey].score += score;
         });
 
+        // Sort by Semantic Score instead of array length
         const sortedKeys = Object.keys(colorClusters).sort((a, b) => {
-            return colorClusters[b].materials.length - colorClusters[a].materials.length;
+            return colorClusters[b].score - colorClusters[a].score;
         });
 
         if (sortedKeys.length > 0) {
@@ -126,13 +137,6 @@ const ColorEngine = {
         this.brightnessSlider.addEventListener('input', (e) => {
             if (this.viewer) this.viewer.exposure = parseFloat(e.target.value);
         });
-
-        this.contrastSlider.addEventListener('input', (e) => {
-            if (this.viewer) {
-                const contrastVal = parseFloat(e.target.value);
-                this.viewer.style.filter = `contrast(${contrastVal})`;
-            }
-        });
     },
 
     reset() {
@@ -151,10 +155,6 @@ const ColorEngine = {
         if (this.brightnessSlider) {
             this.brightnessSlider.value = "1.0";
             if(this.viewer) this.viewer.exposure = 1.0;
-        }
-        if (this.contrastSlider) {
-            this.contrastSlider.value = "1.0";
-            if(this.viewer) this.viewer.style.filter = `contrast(1.0)`;
         }
         
         const dock = document.getElementById('colorEditorDock');
