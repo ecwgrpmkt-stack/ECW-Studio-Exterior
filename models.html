@@ -59,24 +59,33 @@
             </div>
             
             <div class="rgb-picker-module">
-                <label for="primaryColorPicker">PRIMARY COLOR</label>
-                <div class="picker-wrapper">
+                <div class="module-title-row">
+                    <span class="module-label">PRIMARY COLOR</span>
+                    <button class="reset-btn" id="resetPrimaryBtn" title="Reset Primary Color">↺</button>
+                </div>
+                <label class="picker-wrapper" for="primaryColorPicker">
                     <input type="color" id="primaryColorPicker" value="#ffffff" disabled>
                     <span id="primaryHexDisplay" class="hex-display">#FFFFFF</span>
-                </div>
+                </label>
             </div>
 
             <div class="rgb-picker-module">
-                <label for="secondaryColorPicker">SECONDARY COLOR</label>
-                <div class="picker-wrapper">
+                <div class="module-title-row">
+                    <span class="module-label">SECONDARY COLOR</span>
+                    <button class="reset-btn" id="resetSecondaryBtn" title="Reset Secondary Color">↺</button>
+                </div>
+                <label class="picker-wrapper" for="secondaryColorPicker">
                     <input type="color" id="secondaryColorPicker" value="#000000" disabled>
                     <span id="secondaryHexDisplay" class="hex-display">#000000</span>
-                </div>
+                </label>
             </div>
 
             <div class="sliders-container">
                 <div class="slider-module">
-                    <label>BRIGHTNESS</label>
+                    <div class="module-title-row">
+                        <span class="module-label">BRIGHTNESS</span>
+                        <button class="reset-btn" id="resetBrightnessBtn" title="Reset Brightness">↺</button>
+                    </div>
                     <input type="range" id="brightnessSlider" min="0.2" max="2.0" step="0.1" value="1.0">
                 </div>
             </div>
